@@ -1,0 +1,4685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Interactive Unit Circle</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+  <style>
+    :root {
+      --bg: #f5f6f9;
+      --card-bg: #ffffff;
+      --ink: #1c1d22;
+      --mute: #7c8290;
+      --ring: #e1e4ec;
+      --ring-darker: #cbd0dc;
+      --blue: #3b66f5;
+      --blue-subtle: rgba(59, 102, 245, 0.12);
+      --red: #eb445a;
+      --red-subtle: rgba(235, 68, 90, 0.15);
+      --yel: #e59d00;
+      --yel-subtle: rgba(229, 157, 0, 0.15);
+
+      /* Semantic Trigonometric Color System */
+      --deg-col: #788292;
+      --sin-col: #f97316;
+      --sin-subtle: rgba(249, 115, 22, 0.14);
+      --cos-col: #10b981;
+      --cos-subtle: rgba(16, 185, 129, 0.14);
+      --tan-col: #8b5cf6;
+      --tan-subtle: rgba(139, 92, 246, 0.14);
+      --len-col: #eab308;
+      --len-subtle: rgba(234, 179, 8, 0.15);
+      --needle-col: #eb445a;
+      --needle-subtle: rgba(235, 68, 90, 0.18);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      box-sizing: border-box;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #111317;
+        --card-bg: #1a1d24;
+        --ink: #eff1f5;
+        --mute: #8e95a5;
+        --ring: #2a2e39;
+        --ring-darker: #3d4352;
+        --blue: #6385ff;
+        --blue-subtle: rgba(99, 133, 255, 0.18);
+        --red: #f2556b;
+        --red-subtle: rgba(242, 85, 107, 0.22);
+        --yel: #f0ac1a;
+        --yel-subtle: rgba(240, 172, 26, 0.2);
+
+        --deg-col: #94a3b8;
+        --sin-col: #fb923c;
+        --sin-subtle: rgba(251, 146, 60, 0.2);
+        --cos-col: #34d399;
+        --cos-subtle: rgba(52, 211, 153, 0.2);
+        --tan-col: #a78bfa;
+        --tan-subtle: rgba(167, 139, 250, 0.2);
+        --len-col: #facc15;
+        --len-subtle: rgba(250, 204, 21, 0.2);
+        --needle-col: #f87171;
+        --needle-subtle: rgba(248, 113, 113, 0.22);
+
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #111317;
+      --card-bg: #1a1d24;
+      --ink: #eff1f5;
+      --mute: #8e95a5;
+      --ring: #2a2e39;
+      --ring-darker: #3d4352;
+      --blue: #6385ff;
+      --blue-subtle: rgba(99, 133, 255, 0.18);
+      --red: #f2556b;
+      --red-subtle: rgba(242, 85, 107, 0.22);
+      --yel: #f0ac1a;
+      --yel-subtle: rgba(240, 172, 26, 0.2);
+
+      --deg-col: #94a3b8;
+      --sin-col: #fb923c;
+      --sin-subtle: rgba(251, 146, 60, 0.2);
+      --cos-col: #34d399;
+      --cos-subtle: rgba(52, 211, 153, 0.2);
+      --tan-col: #a78bfa;
+      --tan-subtle: rgba(167, 139, 250, 0.2);
+      --len-col: #facc15;
+      --len-subtle: rgba(250, 204, 21, 0.2);
+      --needle-col: #f87171;
+      --needle-subtle: rgba(248, 113, 113, 0.22);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    /* Outer Wrapper */
+    .app-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Top Title Bar: Hidden in Normal View, Visible ONLY in Fullscreen (Height = browser URL bar: 48px) */
+    .fullscreen-title-bar {
+      display: none;
+      height: 48px;
+      padding: 0 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--ring);
+      align-items: center;
+      justify-content: space-between;
+      flex: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    :fullscreen .fullscreen-title-bar,
+    :-webkit-full-screen .fullscreen-title-bar {
+      display: flex;
+    }
+
+    .fullscreen-title-bar h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--ink);
+      text-align: center;
+      flex: 1;
+    }
+
+    /* Main Grid: EXACT 23% | 55% | 22% with Dynamic Collapse Support */
+    .app {
+      display: grid;
+      grid-template-columns: var(--col-data, 23%) 1fr var(--col-slider, 22%);
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      padding: 8px;
+      gap: 8px;
+      overflow: hidden;
+      transition: grid-template-columns 0.22s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    .panel-collapsed-label {
+      display: none;
+    }
+
+    /* Collapse states in Landscape */
+    @media (orientation: landscape) {
+      .app.data-collapsed {
+        --col-data: 44px;
+      }
+
+      .app.data-collapsed .col-data .val-cards,
+      .app.data-collapsed .col-data .panel-title-text {
+        display: none !important;
+      }
+
+      .app.data-collapsed .col-data {
+        padding: 6px;
+        align-items: center;
+      }
+
+      .app.data-collapsed .col-data .panel-header {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 2px;
+      }
+
+      .app.data-collapsed .col-data .panel-header-actions {
+        flex-direction: column !important;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+      }
+
+      .app.data-collapsed .col-data .panel-collapsed-label {
+        display: block !important;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--mute);
+        text-transform: uppercase;
+        margin-top: 18px;
+        cursor: pointer;
+      }
+
+      .app.slider-collapsed {
+        --col-slider: 44px;
+      }
+
+      .app.slider-collapsed .col-slider .slider-actions,
+      .app.slider-collapsed .col-slider .slider-container,
+      .app.slider-collapsed .col-slider .legend-panel-box,
+      .app.slider-collapsed .col-slider .panel-title-text {
+        display: none !important;
+      }
+
+      .app.slider-collapsed .col-slider {
+        padding: 6px;
+        align-items: center;
+      }
+
+      .app.slider-collapsed .col-slider .panel-header {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .app.slider-collapsed .col-slider .panel-collapsed-label {
+        display: block !important;
+        writing-mode: vertical-rl;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--mute);
+        text-transform: uppercase;
+        margin-top: 14px;
+        cursor: pointer;
+      }
+    }
+
+    /* Collapsed Action Strips & Cursors */
+    .collapsed-slider-actions {
+      display: none;
+    }
+
+    .app.slider-collapsed .col-slider .collapsed-slider-actions,
+    .col-slider.is-collapsed .collapsed-slider-actions {
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      width: 100%;
+    }
+
+    .app.data-collapsed .col-data,
+    .col-data.is-collapsed,
+    .app.slider-collapsed .col-slider,
+    .col-slider.is-collapsed {
+      cursor: pointer;
+    }
+
+    .app.data-collapsed .col-data button,
+    .col-data.is-collapsed button,
+    .app.slider-collapsed .col-slider button,
+    .col-slider.is-collapsed button {
+      cursor: pointer;
+    }
+
+    /* Common Panel Card */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+      transition: all 0.2s ease;
+    }
+
+    /* Panel Header with Top-Right Collapse Toggle */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      flex: none;
+      min-height: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .panel-title-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .panel-header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      flex: none;
+    }
+
+    .panel-toggle-btn {
+      background: transparent;
+      border: 1px solid var(--ring);
+      border-radius: 6px;
+      width: 25px;
+      height: 25px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      color: var(--mute);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex: none;
+      box-sizing: border-box;
+    }
+
+    .panel-toggle-btn:hover {
+      background: var(--bg);
+      color: var(--ink);
+      border-color: var(--ring-darker);
+    }
+
+    .panel-toggle-btn.active,
+    .panel-toggle-btn.on {
+      background: var(--blue) !important;
+      color: #fff !important;
+      border-color: var(--blue) !important;
+    }
+
+    /* btnToggleHud: ONLY shown when Data panel is collapsed */
+    #btnToggleHud {
+      display: none !important;
+    }
+
+    .app.data-collapsed #btnToggleHud,
+    .col-data.is-collapsed #btnToggleHud {
+      display: inline-flex !important;
+    }
+
+    /* Buttons & Controls Base */
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-sm);
+      padding: 5px 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      border-color: var(--ring-darker);
+      background: var(--bg);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.active,
+    button.on {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    /* -------------------------------------------------------------
+       COLUMN 1: [23%] DATA (Trigonometric Values)
+       ------------------------------------------------------------- */
+    .col-data {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .val-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      justify-content: space-between;
+    }
+
+    .val-card {
+      border: 1px solid var(--ring);
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1 1 0;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+      contain: layout paint;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 22px;
+      min-height: 22px;
+      max-height: 22px;
+      flex: none;
+      margin-bottom: 2px;
+    }
+
+    .card-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--mute);
+      letter-spacing: 0.03em;
+    }
+
+    .card-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      height: 34px;
+      min-height: 34px;
+      max-height: 34px;
+      flex: none;
+    }
+
+    .card-sweet {
+      font-family: "STIX Two Text", "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 600;
+      color: var(--blue);
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      overflow: hidden;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-dec {
+      font-family: "STIX Two Text", "Times New Roman", serif;
+      font-size: 16px;
+      color: var(--mute);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      flex: none;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* Color Coded Value Cards */
+    #valDegRad,
+    #valDegDec {
+      color: var(--deg-col) !important;
+    }
+
+    #valSinExact,
+    #valSinDec {
+      color: var(--sin-col) !important;
+    }
+
+    #valCosExact,
+    #valCosDec {
+      color: var(--cos-col) !important;
+    }
+
+    #valTanExact,
+    #valTanDec {
+      color: var(--tan-col) !important;
+    }
+
+    /* Math fraction styling */
+    .f {
+      display: inline-flex;
+      flex-direction: column;
+      font-size: 0.82em;
+      line-height: 1.05;
+      margin: 0 2px;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .f span+span {
+      border-top: 1.5px solid currentColor;
+    }
+
+    /* Blocker badge for non-sweet angles */
+    .no-sweet-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--mute);
+      background: var(--card-bg);
+      border: 1px dashed var(--ring-darker);
+      border-radius: 6px;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .no-sweet-badge:hover {
+      color: var(--ink);
+      border-color: var(--mute);
+    }
+
+    /* -------------------------------------------------------------
+       COLUMN 2: [55%] DIAGRAM (Huge & Clean Canvas)
+       ------------------------------------------------------------- */
+    .col-diag {
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Header Toolbar inside Diagram */
+    .diag-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex: none;
+      margin-bottom: 2px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid var(--ring);
+    }
+
+    .toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .segmented-control {
+      display: inline-flex;
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .segmented-control button {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      color: var(--mute);
+    }
+
+    .segmented-control button.active {
+      background: var(--card-bg);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Slider Panel Legend Box (25% height below slider, slider gets 75%) */
+    .col-slider .slider-container {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-md);
+      background: var(--bg);
+      padding: 6px;
+      overflow: hidden;
+      touch-action: none;
+      transition: flex 0.2s ease;
+    }
+
+    .col-slider.show-legend .slider-container {
+      flex: 3;
+      /* 75% height */
+    }
+
+    .legend-panel-box {
+      display: none;
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-md);
+      padding: 6px 8px;
+      flex-direction: column;
+      gap: 5px;
+      flex: none;
+      min-height: auto;
+      font-size: 10px;
+      color: var(--ink);
+      box-sizing: border-box;
+    }
+
+    .col-slider.show-legend .legend-panel-box {
+      display: flex;
+    }
+
+    .legend-guide-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.2;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .legend-guide-icon {
+      font-size: 11px;
+      color: var(--blue);
+      flex: none;
+    }
+
+    .legend-grid-trig {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px 6px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .legend-item strong {
+      font-weight: 700;
+    }
+
+    .legend-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex: none;
+    }
+
+    /* SVG Canvas Area */
+    .canvas-wrap {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    svg#s {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    svg text {
+      fill: var(--ink);
+      font-family: "STIX Two Text", "Times New Roman", serif;
+      user-select: none;
+    }
+
+    .deg-text {
+      font-size: 13.5px;
+      fill: var(--deg-col);
+      font-weight: 500;
+    }
+
+    .rad-text {
+      font-size: 15px;
+      fill: var(--ink);
+    }
+
+    .coord-text {
+      font-size: 12px;
+      fill: var(--mute);
+    }
+
+    .callout-badge {
+      font-size: 14px;
+      font-weight: 600;
+      fill: var(--needle-col);
+    }
+
+    /* Diagram Corner HUD Overlay (Top-L: Degree, Top-R: Sin, Bottom-L: Cos, Bottom-R: Tan) */
+    .diagram-hud-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-corner {
+      position: absolute;
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      border-radius: 6px;
+      padding: 2.5px 7px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      pointer-events: auto;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      max-width: fit-content;
+      white-space: nowrap;
+      user-select: none;
+      line-height: 1.1;
+      transition: all 0.15s ease;
+      z-index: 10;
+    }
+
+    .hud-corner:hover {
+      border-color: var(--ring-darker);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+    }
+
+    .hud-corner .hud-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--mute);
+      line-height: 1;
+    }
+
+    .hud-corner .hud-val-row {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
+      line-height: 1.15;
+    }
+
+    .hud-corner .hud-val-main {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .hud-corner .hud-val-sub {
+      font-family: "STIX Two Text", serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mute);
+    }
+
+    .hud-corner .f {
+      font-size: 0.75em;
+      line-height: 0.95;
+      margin: 0 1px;
+      vertical-align: middle;
+    }
+
+    .hud-corner .f span+span {
+      border-top-width: 1px;
+    }
+
+    /* 4 Corner Positions & Semantic Colors */
+    .hud-top-left {
+      top: 5px;
+      left: 5px;
+      text-align: left;
+    }
+
+    .hud-top-left .hud-val-main {
+      color: var(--deg-col);
+    }
+
+    .hud-top-right {
+      top: 5px;
+      right: 5px;
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    .hud-top-right .hud-val-main {
+      color: var(--sin-col);
+    }
+
+    .hud-bottom-left {
+      bottom: 5px;
+      left: 5px;
+      text-align: left;
+    }
+
+    .hud-bottom-left .hud-val-main {
+      color: var(--cos-col);
+    }
+
+    .hud-bottom-right {
+      bottom: 5px;
+      right: 5px;
+      text-align: right;
+      align-items: flex-end;
+    }
+
+    .hud-bottom-right .hud-val-main {
+      color: var(--tan-col);
+    }
+
+    /* Size Variations controlled by text size settings */
+    .diagram-hud-overlay[data-size="small"] .hud-corner {
+      padding: 2px 5px;
+    }
+
+    .diagram-hud-overlay[data-size="small"] .hud-label {
+      font-size: 7.5px;
+    }
+
+    .diagram-hud-overlay[data-size="small"] .hud-val-main {
+      font-size: 10.5px;
+    }
+
+    .diagram-hud-overlay[data-size="small"] .hud-val-sub {
+      font-size: 9.5px;
+    }
+
+    .diagram-hud-overlay[data-size="big"] .hud-corner {
+      padding: 3.5px 8.5px;
+    }
+
+    .diagram-hud-overlay[data-size="big"] .hud-label {
+      font-size: 9.5px;
+    }
+
+    .diagram-hud-overlay[data-size="big"] .hud-val-main {
+      font-size: 13.5px;
+    }
+
+    .diagram-hud-overlay[data-size="big"] .hud-val-sub {
+      font-size: 12px;
+    }
+
+    #btnLengths.active {
+      background: var(--len-col) !important;
+      border-color: var(--len-col) !important;
+      color: #000 !important;
+      font-weight: 600;
+    }
+
+    /* -------------------------------------------------------------
+       COLUMN 3: [22%] SLIDER (Loop Controller)
+       ------------------------------------------------------------- */
+    .col-slider {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: none;
+    }
+
+    .playback-group {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      gap: 4px;
+    }
+
+    .quick-toggles-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 0.9fr;
+      gap: 4px;
+    }
+
+    .quick-toggles-row button {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 5px;
+      white-space: nowrap;
+    }
+
+    .legend-slider-guide {
+      background: rgba(59, 102, 245, 0.08);
+      border-left: 2px solid var(--blue);
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+    }
+
+    .legend-icon {
+      font-size: 11.5px;
+      color: var(--blue);
+      font-weight: 700;
+      width: 14px;
+      text-align: center;
+      flex: none;
+    }
+
+
+    /* Mode 1-V: Vertical 360° Milestone Tracks side by side (Landscape mode ||||||||) */
+    .tracks-vertical {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 2px;
+      position: relative;
+    }
+
+    .v-track-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      height: 100%;
+    }
+
+    .v-milestone-label {
+      font-size: 8px;
+      font-weight: 600;
+      color: var(--mute);
+      height: 14px;
+      flex: none;
+      line-height: 14px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      user-select: none;
+      cursor: pointer;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .v-milestone-label:hover {
+      color: var(--blue);
+      transform: scale(1.15);
+    }
+
+    .v-track-bar {
+      flex: 1;
+      width: 4px;
+      background: var(--ring);
+      border-radius: 2px;
+      position: relative;
+      overflow: visible;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .v-track-bar.is-milestone {
+      width: 5px;
+      background: var(--ring-darker, #4a5264);
+    }
+
+    .v-track-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      transition: height 0.05s linear;
+    }
+
+    .v-thumb {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 50%);
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Mode 1-H: Horizontal Stacked Tracks (Portrait mode ======) */
+    .tracks-horizontal {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1px;
+      position: relative;
+      padding: 2px 0;
+    }
+
+    .h-track-row {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 5px;
+      position: relative;
+    }
+
+    .h-milestone-label {
+      width: 22px;
+      font-size: 8.5px;
+      font-weight: 600;
+      color: var(--mute);
+      text-align: right;
+      flex: none;
+      line-height: 1;
+      white-space: nowrap;
+      user-select: none;
+      cursor: pointer;
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+
+    .h-milestone-label:hover {
+      color: var(--blue);
+      transform: scale(1.15);
+    }
+
+    .h-track-bar {
+      flex: 1;
+      height: 3.5px;
+      background: var(--ring);
+      border-radius: 2px;
+      position: relative;
+      overflow: visible;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .h-track-bar.is-milestone {
+      height: 4.5px;
+      background: var(--ring-darker, #4a5264);
+    }
+
+    .h-track-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      background: var(--blue);
+      border-radius: 2px;
+      transition: width 0.05s linear;
+    }
+
+    .h-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Mode 2: 180°–180° Split in One Track */
+    .dual-split-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      gap: 6px;
+    }
+
+    .split-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+    }
+
+    .split-col-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mute);
+    }
+
+    .split-bar {
+      flex: 1;
+      width: 12px;
+      background: var(--ring);
+      border-radius: 6px;
+      position: relative;
+    }
+
+    /* Mode 3: 1 Continuous Slider Only */
+    .single-continuous-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 10px;
+    }
+
+    .single-ticks-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--mute);
+      text-align: right;
+    }
+
+    .single-cont-bar {
+      flex: 1;
+      max-width: 16px;
+      height: 100%;
+      background: var(--ring);
+      border-radius: 8px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .single-cont-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--blue);
+      border-radius: 8px;
+    }
+
+    .single-cont-thumb {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+
+    /* Simple Mode (1 Loop): Vertical for Landscape */
+    .simple-slider-v {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+    }
+
+    .simple-angle-display-v {
+      text-align: center;
+      flex: none;
+    }
+
+    .simple-angle-display-v h2 {
+      font-family: "STIX Two Text", serif;
+      font-size: 26px;
+      margin: 0;
+      color: var(--red);
+      line-height: 1.1;
+    }
+
+    .simple-angle-display-v small {
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .simple-track-bar-v {
+      flex: 1;
+      width: 14px;
+      background: var(--ring-darker, #3d4352);
+      border-radius: 7px;
+      position: relative;
+      cursor: pointer;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .simple-track-fill-v {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--blue);
+      border-radius: 7px;
+    }
+
+    .simple-thumb-v {
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+    }
+
+    /* Simple Mode (1 Loop): Horizontal for Portrait */
+    .simple-slider-h {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 4px 10px;
+    }
+
+    .simple-angle-display-h {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      flex: none;
+    }
+
+    .simple-angle-display-h h2 {
+      font-family: "STIX Two Text", serif;
+      font-size: 24px;
+      margin: 0;
+      color: var(--red);
+      line-height: 1;
+    }
+
+    .simple-angle-display-h small {
+      font-size: 13px;
+      color: var(--mute);
+    }
+
+    .simple-track-bar-h {
+      width: 100%;
+      height: 12px;
+      background: var(--ring-darker, #3d4352);
+      border-radius: 6px;
+      position: relative;
+      cursor: pointer;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .simple-track-fill-h {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: var(--blue);
+      border-radius: 6px;
+    }
+
+    .simple-thumb-h {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+    }
+
+    .simple-ticks-h {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--mute);
+      padding: 0 4px;
+      user-select: none;
+    }
+
+    /* -------------------------------------------------------------
+       POPUPS & MODALS (Settings & Sweet Spot Info)
+       ------------------------------------------------------------- */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .settings-section-divider {
+      border-top: 1px solid var(--ring);
+      margin: 6px 0 2px;
+      padding-top: 4px;
+    }
+
+    .settings-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .settings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .settings-table th,
+    .settings-table td {
+      padding: 6px 6px;
+      text-align: left;
+      border-bottom: 1px solid var(--ring);
+      vertical-align: middle;
+    }
+
+    .settings-table th {
+      color: var(--mute);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.05em;
+    }
+
+    .settings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: var(--mute);
+      padding: 2px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: var(--ink);
+      background: var(--ring);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .setting-label {
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    select,
+    input[type="number"] {
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--ink);
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius-sm);
+      padding: 5px 8px;
+      outline: none;
+    }
+
+    /* Coil Math Visualizer Curve (Read-Only) */
+    .coil-curve-wrap {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      gap: 6px;
+      overflow: hidden;
+      box-sizing: border-box;
+      background: transparent;
+      border: none;
+      justify-content: flex-start;
+    }
+
+    .coil-curve-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      flex: none;
+      box-sizing: border-box;
+    }
+
+    .coil-curve-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .coil-curve-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgba(59, 130, 246, 0.14);
+      color: var(--blue);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .coil-comp-badge {
+      font-size: 4px;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: rgba(168, 85, 247, 0.14);
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .coil-read-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      border-radius: 4px;
+      padding: 3px 6px;
+      text-align: center;
+      width: 82px;
+      flex-shrink: 0;
+      user-select: text;
+      box-sizing: border-box;
+      line-height: 1.2;
+    }
+
+    .coil-curve-canvas-wrap {
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-sm);
+      background: var(--card-bg);
+      border: 1px solid var(--ring);
+      pointer-events: none;
+      box-sizing: border-box;
+      flex: none;
+      /* Read-only: interaction driven by diagram needle, play, +/-360 */
+    }
+
+    .coil-curve-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .coil-curve-note {
+      font-size: 9px;
+      color: var(--mute);
+      text-align: center;
+      padding: 3px 2px 1px 2px;
+      flex: none;
+      user-select: none;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    /* In Infinite Mode, hide vertical/horizontal slider legends to give the curve maximum clean height */
+    .app.mode-infinite .legend-slider-guide {
+      display: none !important;
+    }
+
+    .caution-modal-box {
+      border: 1.5px solid #ef4444 !important;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25) !important;
+    }
+
+    /* -------------------------------------------------------------
+       RESPONSIVE ADAPTATION (Mobile Portrait & Vertical Aspect)
+       ------------------------------------------------------------- */
+    @media (orientation: portrait),
+    (max-aspect-ratio: 1/1) {
+
+      body,
+      .app-wrapper {
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh;
+      }
+
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        padding: 6px;
+        gap: 6px;
+        overflow: hidden;
+      }
+
+      /* In portrait, hide the vertical rotated text completely */
+      .panel-collapsed-label {
+        display: none !important;
+      }
+
+      /* In portrait, when collapsed: collapse to sleek 38px horizontal strip */
+      .app.data-collapsed .col-data,
+      .col-data.is-collapsed,
+      .app.slider-collapsed .col-slider,
+      .col-slider.is-collapsed {
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 38px !important;
+        flex: none !important;
+        padding: 6px 12px !important;
+        justify-content: center !important;
+        align-items: stretch !important;
+      }
+
+      .app.data-collapsed .col-data .val-cards,
+      .col-data.is-collapsed .val-cards,
+      .app.slider-collapsed .col-slider .slider-actions,
+      .app.slider-collapsed .col-slider .slider-container,
+      .app.slider-collapsed .col-slider .legend-panel-box,
+      .col-slider.is-collapsed .slider-actions,
+      .col-slider.is-collapsed .slider-container,
+      .col-slider.is-collapsed .legend-panel-box {
+        display: none !important;
+      }
+
+      .app.data-collapsed .col-data .panel-header,
+      .col-data.is-collapsed .panel-header,
+      .app.slider-collapsed .col-slider .panel-header,
+      .col-slider.is-collapsed .panel-header {
+        margin-bottom: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+      }
+
+      .app.data-collapsed .col-data .panel-title-text,
+      .col-data.is-collapsed .panel-title-text,
+      .app.slider-collapsed .col-slider .panel-title-text,
+      .col-slider.is-collapsed .panel-title-text {
+        display: flex !important;
+      }
+
+      .panel-header-actions,
+      .app.data-collapsed .col-data .panel-header-actions {
+        flex-direction: row !important;
+        gap: 6px !important;
+        align-items: center !important;
+      }
+
+      .col-data {
+        flex: none;
+        height: auto;
+      }
+
+      .val-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+
+      .val-card {
+        padding: 4px 8px;
+        gap: 2px;
+      }
+
+      .card-sweet {
+        font-size: 16px;
+      }
+
+      .card-dec {
+        font-size: 12px;
+      }
+
+      /* Diagram panel expands to fill all available middle height without overflowing */
+      .col-diag {
+        flex: 1 1 0px;
+        min-height: 0;
+        height: auto;
+        overflow: hidden;
+      }
+
+      .col-slider {
+        flex: none;
+        height: auto;
+      }
+
+      /* In portrait mode, ensure slider-container has an explicit height so vertical tracks never collapse */
+      .col-slider .slider-container {
+        height: 110px !important;
+        min-height: 110px !important;
+        flex: none !important;
+      }
+
+      .col-slider.show-legend .slider-container {
+        height: 95px !important;
+        min-height: 95px !important;
+      }
+
+      /* In portrait mode, display legend as a compact 2 columns grid */
+      .col-slider.show-legend .legend-panel-box {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: auto;
+        gap: 3px 8px;
+        padding: 5px 8px;
+        flex: none;
+      }
+
+      .legend-item {
+        font-size: 11px;
+      }
+    }
+
+    /* Ultra-compact adaptation for mobile landscape (e.g. iPhone SE / phone height <= 480px) */
+    @media (orientation: landscape) and (max-height: 480px) {
+      .app {
+        padding: 4px 6px;
+        gap: 6px;
+      }
+
+      .panel {
+        padding: 4px 6px;
+      }
+
+      .panel-header {
+        margin-bottom: 2px;
+      }
+
+      .val-cards {
+        gap: 4px;
+      }
+
+      .val-card {
+        padding: 4px 6px;
+        gap: 1px;
+      }
+
+      .card-sweet {
+        font-size: 15px;
+      }
+
+      .card-dec {
+        font-size: 11px;
+      }
+
+      .playback-group button,
+      .quick-toggles-row button {
+        padding: 3px 5px;
+        font-size: 11px;
+      }
+
+      .diag-toolbar {
+        margin-bottom: 2px;
+        padding-bottom: 2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-wrapper">
+    <!-- Top Header Bar: Displayed ONLY in Fullscreen Mode (Height = 48px, size URL bar browser) -->
+    <header class="fullscreen-title-bar">
+      <div style="width: 120px; flex: none;"></div>
+      <h1>INTERACTIVE UNIT CIRCLE</h1>
+      <div style="width: 120px; display: flex; justify-content: flex-end; flex: none;">
+        <button id="btnExitFullscreen" style="padding: 5px 10px; font-size: 12px; border-radius: 6px;">⛶ Exit
+          Fullscreen</button>
+      </div>
+    </header>
+
+    <!-- Main Viewport-Locked Grid: 23% | 55% | 22% -->
+    <main class="app">
+      <!-- COLUMN 1: [23%] DATA (Values) with Top-Right Collapse Toggle -->
+      <section class="panel col-data" id="panelData">
+        <div class="panel-header">
+          <div class="panel-title-text">
+            <span id="valDataTitle">Trigonometric Values</span>
+            <span id="loopBadge" style="font-size:11px; font-weight:600; color:var(--blue);">Loop +1</span>
+          </div>
+          <div class="panel-header-actions" id="dataHeaderActions">
+            <button id="btnToggleData" class="panel-toggle-btn" title="Toggle Data panel">
+              <span id="iconToggleData">◀</span>
+            </button>
+            <button id="btnToggleHud" class="panel-toggle-btn active"
+              title="Corner HUD Values on Diagram when collapsed: ON">
+              <span id="iconToggleHud">⚃</span>
+            </button>
+          </div>
+        </div>
+        <div class="panel-collapsed-label" id="labelExpandData" title="Click to expand Values">VALUES</div>
+        <div class="val-cards">
+          <!-- Degree & Radian -->
+          <div class="val-card">
+            <div class="card-head">
+              <span class="card-label" id="lblAngleCard">ANGLE (θ)</span>
+            </div>
+            <div class="card-body">
+              <div class="card-sweet" id="valDegRad">π/6</div>
+              <div class="card-dec" id="valDegDec">30.0°</div>
+            </div>
+          </div>
+
+          <!-- Sin -->
+          <div class="val-card">
+            <div class="card-head">
+              <span class="card-label" id="lblSinCard">SIN (y)</span>
+              <span id="badgeSin"></span>
+            </div>
+            <div class="card-body">
+              <div class="card-sweet" id="valSinExact">1/2</div>
+              <div class="card-dec" id="valSinDec">0.500</div>
+            </div>
+          </div>
+
+          <!-- Cos -->
+          <div class="val-card">
+            <div class="card-head">
+              <span class="card-label" id="lblCosCard">COS (x)</span>
+              <span id="badgeCos"></span>
+            </div>
+            <div class="card-body">
+              <div class="card-sweet" id="valCosExact">√3/2</div>
+              <div class="card-dec" id="valCosDec">0.866</div>
+            </div>
+          </div>
+
+          <!-- Tan -->
+          <div class="val-card">
+            <div class="card-head">
+              <span class="card-label" id="lblTanCard">TAN (y/x)</span>
+              <span id="badgeTan"></span>
+            </div>
+            <div class="card-body">
+              <div class="card-sweet" id="valTanExact">√3/3</div>
+              <div class="card-dec" id="valTanDec">0.577</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 2: [55%] DIAGRAM (Huge & Clean Canvas) -->
+      <section class="panel col-diag">
+        <!-- Diagram Top Header -->
+        <div class="diag-toolbar">
+          <div class="toolbar-row">
+            <div class="toolbar-group">
+              <div class="segmented-control">
+                <button id="btnModeSimple" class="active">1 Loop</button>
+                <button id="btnModeCoil">Coil Reference</button>
+                <button id="btnModeInfinite">Infinite Loops</button>
+              </div>
+            </div>
+            <div class="toolbar-group">
+              <button id="btnLengths" class="active" title="Toggle trigonometric line lengths on circle">
+                <span>Length(r=1)</span>
+              </button>
+              <button id="btnFullscreen" title="Toggle Fullscreen Mode" style="padding: 4px 7px;">
+                <span id="iconFullscreen" style="font-size: 13px;">⛶</span>
+              </button>
+              <button id="btnSettings" title="Settings">
+                <span>⚙</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit Circle Canvas (100% Clean & Maximized) -->
+        <div class="canvas-wrap">
+          <svg id="s" viewBox="0 0 560 560" preserveAspectRatio="xMidYMid meet"></svg>
+
+          <!-- Diagram Corner HUD Overlay (Top-L: Degree, Top-R: Sin, Bottom-L: Cos, Bottom-R: Tan) -->
+          <div class="diagram-hud-overlay" id="diagramHudOverlay" data-size="medium">
+            <div class="hud-corner hud-top-left" id="hudAngle">
+              <span class="hud-label">ANGLE (θ)</span>
+              <div class="hud-val-row">
+                <span class="hud-val-main" id="hudAngleDec">30°</span>
+                <span class="hud-val-sub" id="hudAngleSweet">(π/6)</span>
+              </div>
+            </div>
+            <div class="hud-corner hud-top-right" id="hudSin">
+              <span class="hud-label">SIN (y)</span>
+              <div class="hud-val-row">
+                <span class="hud-val-main" id="hudSinDec">0.500</span>
+                <span class="hud-val-sub" id="hudSinSweet">(1/2)</span>
+              </div>
+            </div>
+            <div class="hud-corner hud-bottom-left" id="hudCos">
+              <span class="hud-label">COS (x)</span>
+              <div class="hud-val-row">
+                <span class="hud-val-main" id="hudCosDec">0.866</span>
+                <span class="hud-val-sub" id="hudCosSweet">(√3/2)</span>
+              </div>
+            </div>
+            <div class="hud-corner hud-bottom-right" id="hudTan">
+              <span class="hud-label">TAN (y/x)</span>
+              <div class="hud-val-row">
+                <span class="hud-val-main" id="hudTanDec">0.577</span>
+                <span class="hud-val-sub" id="hudTanSweet">(√3/3)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COLUMN 3: [22%] SLIDER (Loop Controller) with Top-Right Collapse Toggle -->
+      <section class="panel col-slider show-legend" id="panelSlider">
+        <div class="panel-header">
+          <div class="panel-title-text">
+            <span>Controls & Slider</span>
+          </div>
+          <button id="btnToggleSlider" class="panel-toggle-btn" title="Toggle Controls & Slider panel">
+            <span id="iconToggleSlider">▶</span>
+          </button>
+        </div>
+        <!-- Quick Action Strip when Collapsed (Consecutive: Play, Rotate CW Backward, Rotate CW Forward, Magnet) -->
+        <div class="collapsed-slider-actions" id="collapsedSliderActions">
+          <button id="btnCollapsedPlay" class="panel-toggle-btn active"
+            title="Play / Pause continuous rotation">▶</button>
+          <button id="btnCollapsedMinus" class="panel-toggle-btn" title="Rotate backward (−360°)">↺</button>
+          <button id="btnCollapsedPlus" class="panel-toggle-btn" title="Rotate forward (+360°)">↻</button>
+          <button id="btnCollapsedSnap" class="panel-toggle-btn on" title="Magnet / Snap: ON">🧲</button>
+        </div>
+        <div class="panel-collapsed-label" id="labelExpandSlider" title="Click to expand Controls & Slider">CONTROLS &
+          SLIDER</div>
+        <!-- Controls Toolbar -->
+        <div class="slider-actions">
+          <div class="playback-group">
+            <button id="btnMinus360" title="Minus one full turn">−360°</button>
+            <button id="btnPlay" class="active" title="Play / Pause continuous rotation">▶ Play</button>
+            <button id="btnPlus360" title="Plus one full turn">+360°</button>
+          </div>
+          <div class="quick-toggles-row">
+            <button id="btnSnap" class="on" title="Snap to standard angles (30°, 45°, 60°...)">
+              🧲
+            </button>
+            <button id="btnToggleLegend" class="on" title="Toggle Legend (25% below slider)">
+              📖 Legend: ON
+            </button>
+            <button id="btnLang" title="Switch Language / Ganti Bahasa">
+              🌐 <span id="btnLangText">ID</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stacked / Single Slider Container (Takes ~75% when legend shown) -->
+        <div class="slider-container" id="sliderContainer">
+          <!-- Rendered dynamically according to Slider Setting -->
+        </div>
+
+        <!-- Legend Panel Box -->
+        <div class="legend-panel-box" id="legendPanelBox">
+          <div class="legend-guide-row" id="legendGuideRow">
+            <span class="legend-guide-icon" id="legGuideIcon">↕</span>
+            <span class="legend-guide-text" id="legGuideText">Slider: 0° → 360° (bottom → top)</span>
+          </div>
+          <div class="legend-grid-trig">
+            <div class="legend-item" title="cos(θ): horizontal length (x)">
+              <span class="legend-dot" style="background:var(--cos-col);"></span>
+              <span><strong>cos(x):</strong> <span id="legCosDesc">horizontal</span></span>
+            </div>
+            <div class="legend-item" title="sin(θ): vertical length (y)">
+              <span class="legend-dot" style="background:var(--sin-col);"></span>
+              <span><strong>sin(y):</strong> <span id="legSinDesc">vertical</span></span>
+            </div>
+            <div class="legend-item" title="tan(θ): tangent drop line">
+              <span class="legend-dot" style="background:var(--tan-col);"></span>
+              <span><strong>tan:</strong> <span id="legTanDesc">drop line</span></span>
+            </div>
+            <div class="legend-item" title="Needle: angle ray (x, y)">
+              <span class="legend-dot" style="background:var(--needle-col);"></span>
+              <span><strong>ray:</strong> <span id="legNeedleDesc">needle</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="settingsModalTitle">Settings</h3>
+        <button class="modal-close" id="btnCloseSettings">✕</button>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetSliderLayout">Slider Layout</span>
+        <select id="setSliderLayout">
+          <option value="stacked360" selected>Stacked 360° (Default)</option>
+          <option value="stacked180">Stacked 180°–180° in one line</option>
+          <option value="continuous">1 Slider Only</option>
+          <option value="coilCurve">Coil Math Curve (Visualizing Curve)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetLoops">Max Loops</span>
+        <select id="setLoops">
+          <option value="1">±1 loop (360°)</option>
+          <option value="3">±3 loops (1080°)</option>
+          <option value="5">±5 loops (1800°)</option>
+          <option value="10" selected>±10 loops (3600°)</option>
+          <option value="25">±25 loops (9000°)</option>
+          <option value="50">±50 loops (18000°)</option>
+          <option value="100">±100 loops (36000°)</option>
+          <option value="150">±150 loops (54000° - Danger)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetPlayDirection">Play Direction</span>
+        <select id="setPlayDirection">
+          <option value="forward" selected>Forward (+ Counter-Clockwise)</option>
+          <option value="backward">Backward (- Clockwise)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetSliderHandleEnd">Slider Handle +End</span>
+        <select id="setSliderHandleEnd">
+          <option value="start10" selected>Start of +10th Slider (Default)</option>
+          <option value="end9">End of +9th Slider (Hide +10 Bar)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetRadius">Circle Radius (r)</span>
+        <input type="number" id="setRadius" min="1" max="10" step="1" value="1" style="width: 70px;">
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetTheme">Color Theme</span>
+        <select id="setTheme">
+          <option value="system" selected>Auto (System)</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetLang">Language / Bahasa</span>
+        <select id="setLang">
+          <option value="auto" selected>Auto (Device)</option>
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetZeroDecimal">Degree Decimal (.0)</span>
+        <select id="setZeroDecimal">
+          <option value="true" selected>ON (Always .0, e.g. 9.0°)</option>
+          <option value="false">OFF (Hide .0 when whole, e.g. 9°)</option>
+        </select>
+      </div>
+
+      <!-- Diagram Text & Labels Section -->
+      <div class="settings-section-divider"></div>
+      <div class="settings-section-title">
+        <span id="lblDiagTextTitle">Diagram Text & Labels</span>
+        <button id="btnToggleAdvancedText" type="button" style="font-size: 11px; padding: 2px 8px;">
+          Advanced ▾
+        </button>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetShowAllLabels">Show All Labels</span>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="setShowAllLabels" checked style="cursor: pointer; width: 16px; height: 16px;">
+          <span id="showAllLabelsStatus" style="font-size: 12px; color: var(--mute);">All Visible</span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <span class="setting-label" id="lblSetTextGlobalSize">Global Text Size</span>
+        <select id="setTextGlobalSize">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="big">Big</option>
+        </select>
+      </div>
+
+      <!-- Advanced Categories Table -->
+      <div id="advancedTextTableWrap"
+        style="display: none; background: var(--bg); border: 1px solid var(--ring); border-radius: var(--radius-sm); padding: 4px 6px;">
+        <table class="settings-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th style="text-align: center; width: 50px;">Show</th>
+              <th style="text-align: right; width: 95px;">Size</th>
+            </tr>
+          </thead>
+          <tbody id="textCategoriesTableBody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <button id="btnDoneSettings" class="active" style="margin-top: 6px;">Save & Close</button>
+    </div>
+  </div>
+
+  <!-- EXACT FORM EXPLANATION MODAL -->
+  <div class="modal-overlay" id="exactModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>No Exact Radical Form</h3>
+        <button class="modal-close" id="btnCloseExact">✕</button>
+      </div>
+      <p id="exactModalText" style="font-size: 13.5px; line-height: 1.5; color: var(--mute); margin: 0;">
+        Exact radical forms (like ½, √2/2, and √3/2) only occur at special geometric angles (multiples of 30° and 45°).
+        At other angles, values are irrational transcendental decimals.
+      </p>
+      <button id="btnGotItExact" class="active" style="align-self: flex-end;">Got it</button>
+    </div>
+  </div>
+
+  <!-- CRASH CAUTION POPUP MODAL (>100 loops / 36,000°) -->
+  <div class="modal-overlay" id="crashCautionModal">
+    <div class="modal-box caution-modal-box" style="max-width: 380px; text-align: center;">
+      <div style="font-size: 38px; line-height: 1; margin-bottom: 6px;">⚠️</div>
+      <h3 style="color: #ef4444; margin-bottom: 8px;" id="crashCautionTitle">Caution: It Might Crash!</h3>
+      <p style="font-size: 13px; line-height: 1.5; color: var(--ink); margin-bottom: 14px;" id="crashCautionDesc">
+        Extreme loop count reached (&gt;100 loops / 36,000°)! The /4 /4 /4 infinite curve compression at extreme density
+        may freeze or crash your browser tab.
+      </p>
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button type="button" id="btnCrashResetZero" class="active"
+          style="padding: 7px 14px; font-size: 12px; border-radius: 6px; background: #ef4444; border-color: #ef4444;">
+          Reset to 0°
+        </button>
+        <button type="button" id="btnCrashContinue"
+          style="padding: 7px 14px; font-size: 12px; border-radius: 6px; background: var(--bg); border: 1px solid var(--ring); color: var(--ink);">
+          Continue Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // CONSTANTS & SVG SETUP
+    // -------------------------------------------------------------
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.getElementById("s");
+    const cx = 280, cy = 280, R = 190;
+    const root = document.documentElement;
+
+    const S = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
+    const rads = {
+      30: ["π", "6"], 45: ["π", "4"], 60: ["π", "3"], 90: ["π", "2"],
+      120: ["2π", "3"], 135: ["3π", "4"], 150: ["5π", "6"], 210: ["7π", "6"],
+      225: ["5π", "4"], 240: ["4π", "3"], 270: ["3π", "2"], 300: ["5π", "3"],
+      315: ["7π", "4"], 330: ["11π", "6"]
+    };
+
+    const el = (t, a, p = svg) => {
+      const e = document.createElementNS(NS, t);
+      for (const k in a) e.setAttribute(k, a[k]);
+      p.appendChild(e);
+      return e;
+    };
+
+    const txt = (x, y, s, c, a = "middle", p = svg) => {
+      const e = el("text", { x, y, class: c, "text-anchor": a }, p);
+      e.textContent = s;
+      return e;
+    };
+
+    const textConfig = {
+      degrees: { name: "Degrees (0°–360°)", show: true, size: "medium" },
+      radians: { name: "Radians (π/6, π/4...)", show: true, size: "medium" },
+      coords: { name: "Axis Endpoints (1, −1)", show: true, size: "medium" },
+      axisFrac: { name: "Axis Fractions (½, √2/2, √3/2)", show: true, size: "medium" },
+      angleBadge: { name: "Needle Angle Badge", show: true, size: "medium" },
+      lengthBadges: { name: "Live Length Badges (cos, sin, tan)", show: true, size: "medium" },
+      cornerHud: { name: "Corner HUD Values", show: true, size: "medium" }
+    };
+
+    function getFontSize(cat, defPx, smallPx, bigPx) {
+      const sz = textConfig[cat] ? textConfig[cat].size : "medium";
+      return sz === "small" ? smallPx : sz === "big" ? bigPx : defPx;
+    }
+
+    const badgeText = (x, y, s, textColor, bgColor, strokeColor, a = "middle", p = svg, fontSize = 11, badgeH = 17) => {
+      const g = el("g", {}, p);
+      g.style.pointerEvents = "none";
+      const str = String(s);
+      const textLen = str.length;
+      const w = Math.max(24, textLen * (fontSize * 0.62) + 8);
+      const h = badgeH;
+      let rx = x - w / 2;
+      if (a === "start") rx = x;
+      else if (a === "end") rx = x - w;
+      const ry = y - h / 2;
+
+      el("rect", {
+        x: rx, y: ry, width: w, height: h, rx: 4, ry: 4,
+        fill: bgColor || "var(--card-bg)",
+        stroke: strokeColor || "none",
+        "stroke-width": 1,
+        opacity: 0.94,
+        style: "pointer-events: none;"
+      }, g);
+
+      const cxPos = a === "middle" ? x : (a === "start" ? x + w / 2 : x - w / 2);
+      const t = el("text", {
+        x: cxPos,
+        y: y + (fontSize * 0.32),
+        "text-anchor": "middle",
+        fill: textColor,
+        style: `font-size: ${fontSize}px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; pointer-events: none;`
+      }, g);
+      t.textContent = str;
+      return g;
+    };
+
+    function fracSVG(x, y, n, d, fs, anchor = "middle", p = svg) {
+      const w = Math.max(String(n).length, String(d).length) * fs * 0.55 + 4;
+      let c = anchor === "end" ? x - w / 2 : anchor === "start" ? x + w / 2 : x;
+      const t1 = txt(c, y - 3, n, "rad-text", "middle", p);
+      t1.style.fontSize = fs + "px";
+      t1.style.pointerEvents = "none";
+      el("line", { x1: c - w / 2, x2: c + w / 2, y1: y, y2: y, stroke: "var(--ink)", "stroke-width": 1.2, style: "pointer-events: none;" }, p);
+      const t2 = txt(c, y + fs, d, "rad-text", "middle", p);
+      t2.style.fontSize = fs + "px";
+      t2.style.pointerEvents = "none";
+    }
+
+    // -------------------------------------------------------------
+    // UNIT CIRCLE BACKGROUND (GRID, TICKS, RADIAN ANGLES)
+    // -------------------------------------------------------------
+    const bgGroup = el("g", { id: "bgGrid", style: "pointer-events: none;" });
+
+    let circleRadius = 1;
+    let playDirection = localStorage.getItem("ksi_play_direction") || "forward";
+    let crashCautionShown = false;
+
+    function getAxisFracInfo(k, r) {
+      if (r === 1) {
+        if (k === 1) return { num: "1", den: "2" };
+        if (k === 2) return { num: "√2", den: "2" };
+        return { num: "√3", den: "2" };
+      }
+      if (r % 2 === 0) {
+        const half = r / 2;
+        if (k === 1) return { whole: String(half) };
+        if (k === 2) return { whole: (half === 1 ? "" : half) + "√2" };
+        return { whole: (half === 1 ? "" : half) + "√3" };
+      }
+      const rStr = String(r);
+      if (k === 1) return { num: rStr, den: "2" };
+      if (k === 2) return { num: rStr + "√2", den: "2" };
+      return { num: rStr + "√3", den: "2" };
+    }
+
+    function drawBackground() {
+      bgGroup.innerHTML = "";
+
+      // Base Circle Ring
+      el("circle", { cx, cy, r: R, fill: "none", stroke: "var(--ring-darker)", "stroke-width": 2, style: "pointer-events: none;" }, bgGroup);
+
+      // Invisible reference guide for max 10L ring boundary (r = 110, diameter = 220)
+      el("circle", { id: "biggestRingGuide", cx, cy, r: 110, fill: "none", stroke: "transparent", "stroke-width": 1, style: "pointer-events: none;" }, bgGroup);
+
+      // Minor Angle Ticks every 5°
+      for (let a = 0; a < 360; a += 5) {
+        const is15 = a % 15 === 0;
+        const rad = a * Math.PI / 180;
+        const len = is15 ? 10 : 5;
+        el("line", {
+          x1: cx + (R - len) * Math.cos(rad),
+          y1: cy - (R - len) * Math.sin(rad),
+          x2: cx + R * Math.cos(rad),
+          y2: cy - R * Math.sin(rad),
+          stroke: "var(--mute)",
+          "stroke-width": is15 ? 1.2 : 0.6,
+          opacity: is15 ? 0.7 : 0.4,
+          style: "pointer-events: none;"
+        }, bgGroup);
+      }
+
+      // X and Y Axes
+      el("line", { x1: 20, x2: 540, y1: cy, y2: cy, stroke: "var(--ring-darker)", "stroke-width": 1.2, style: "pointer-events: none;" }, bgGroup);
+      el("line", { x1: cx, x2: cx, y1: 20, y2: 540, stroke: "var(--ring-darker)", "stroke-width": 1.2, style: "pointer-events: none;" }, bgGroup);
+
+      const degFs = getFontSize("degrees", 13.5, 11, 16.5);
+      const radFs = getFontSize("radians", 14, 11.5, 17);
+      const coordFs = getFontSize("coords", 12, 10, 14.5);
+      const fracFs = getFontSize("axisFrac", 12, 10, 14.5);
+
+      S.forEach(a => {
+        const r = a * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+        el("circle", { cx: cx + R * c, cy: cy - R * s, r: 4, fill: "var(--deg-col)" }, bgGroup);
+
+        if (a === 0 || a === 180) return;
+        const dx = a === 90 || a === 270 ? 18 : 0;
+
+        // 1. Degrees (0°–360°)
+        if (textConfig.degrees.show) {
+          const tDeg = txt(cx + (R + (a % 90 ? 20 : 16)) * c + dx, cy - (R + (a % 90 ? 20 : 16)) * s + (a === 90 ? -2 : a === 270 ? 14 : 4), a + "°", "deg-text", "middle", bgGroup);
+          tDeg.style.fontSize = degFs + "px";
+        }
+
+        // 2. Radians Fractions
+        if (textConfig.radians.show) {
+          const q = rads[a];
+          if (q) {
+            fracSVG(cx + (R + 38) * c + (a === 90 || a === 270 ? dx + 8 : 0), cy - (R + 38) * s + (a === 90 ? -6 : a === 270 ? 6 : 0), q[0], q[1], radFs, "middle", bgGroup);
+          }
+        }
+      });
+
+      // 0°, 360° and 180° Degree Labels
+      if (textConfig.degrees.show) {
+        const t0 = txt(cx + R + 10, cy - 6, "0°, 360°", "deg-text", "start", bgGroup);
+        t0.style.fontSize = degFs + "px";
+        const t180 = txt(cx - R - 10, cy - 6, "180°", "deg-text", "end", bgGroup);
+        t180.style.fontSize = degFs + "px";
+      }
+
+      // 0, 2π and π Radian Labels
+      if (textConfig.radians.show) {
+        const tRad0 = txt(cx + R + 10, cy - 22, "0, 2π", "rad-text", "start", bgGroup);
+        tRad0.style.fontSize = (radFs + 1) + "px";
+        const tRad180 = txt(cx - R - 10, cy - 22, "π", "rad-text", "end", bgGroup);
+        tRad180.style.fontSize = (radFs + 1) + "px";
+      }
+
+      // 3. Axis coordinate labels (scaled to circleRadius)
+      if (textConfig.coords.show) {
+        const rStr = String(circleRadius);
+        const c1 = txt(cx + R + 4, cy + 18, rStr, "coord-text", "start", bgGroup);
+        c1.style.fontSize = coordFs + "px";
+        const c2 = txt(cx - R - 4, cy + 18, "−" + rStr, "coord-text", "end", bgGroup);
+        c2.style.fontSize = coordFs + "px";
+        const c3 = txt(cx - 10, cy - R - 4, rStr, "coord-text", "end", bgGroup);
+        c3.style.fontSize = coordFs + "px";
+        const c4 = txt(cx - 10, cy + R + 14, "−" + rStr, "coord-text", "end", bgGroup);
+        c4.style.fontSize = coordFs + "px";
+      }
+
+      // 4. Ticks at r/2, r√2/2, r√3/2 on X and Y axes
+      if (textConfig.axisFrac.show) {
+        [1, 2, 3].forEach(k => {
+          const info = getAxisFracInfo(k, circleRadius);
+          const v = k === 1 ? 0.5 : k === 2 ? Math.SQRT1_2 : Math.sqrt(3) / 2;
+          [1, -1].forEach(sg => {
+            const m = sg < 0 ? "−" : "";
+            if (info.whole) {
+              const twX = txt(cx + sg * v * R, cy + 18, m + info.whole, "frac-text", "middle", bgGroup);
+              twX.style.fontSize = fracFs + "px";
+              const twY = txt(cx - 10 - (m ? 6 : 0), cy - sg * v * R + 4, m + info.whole, "frac-text", "end", bgGroup);
+              twY.style.fontSize = fracFs + "px";
+            } else {
+              fracSVG(cx + sg * v * R, cy + 20, m + info.num, info.den, fracFs, "middle", bgGroup);
+              fracSVG(cx - 10 - (m ? 6 : 0), cy - sg * v * R + 3, m + info.num, info.den, fracFs, "end", bgGroup);
+            }
+          });
+        });
+      }
+    }
+
+    drawBackground();
+
+    const dynGroup = el("g", { id: "dynLayer" });
+
+    // -------------------------------------------------------------
+    // STATE & MATH HELPERS
+    // -------------------------------------------------------------
+    const T = { 0: [0], 30: [1, 2], 45: ["√2", 2], 60: ["√3", 2], 90: [1, 1] };
+    const nrm = a => ((a % 360) + 360) % 360;
+    const gcd = (a, b) => b ? gcd(b, a % b) : a;
+    const f3 = x => Math.abs(x) < 5e-4 ? "0.000" : x.toFixed(3);
+    const fr = (n, d) => `<span class="f"><span>${n}</span><span>${d}</span></span>`;
+
+    function sinRef(d) {
+      d = nrm(d);
+      let r = d % 180;
+      if (r > 90) r = 180 - r;
+      return r in T ? { r, neg: d > 180 } : null;
+    }
+
+    function exactHtml(e) {
+      if (!e) return null;
+      if (e.r === 0) return "0";
+      const t = T[e.r], sg = e.neg ? "−" : "";
+      return e.r === 90 ? sg + "1" : sg + fr(t[0], t[1]);
+    }
+
+    function radFormatted(a, asHtml = true) {
+      if (Number.isInteger(a) && (a % 30 === 0 || a % 45 === 0)) {
+        if (a === 0) return "0";
+        const q = gcd(Math.abs(a), 180), n = a / q, d = 180 / q;
+        const sg = n < 0 ? "−" : "";
+        const m = Math.abs(n);
+        const p = m === 1 ? "π" : m + "π";
+        return d === 1 ? sg + p : sg + (asHtml ? fr(p, d) : p + "/" + d);
+      }
+      return asHtml ? null : (a * Math.PI / 180).toFixed(2) + " rad";
+    }
+
+    let angle = 30;
+    let isPlaying = false;
+    let activeMode = "simple"; // "simple" | "coil" | "infinite"
+    let isSimpleMode = true;
+    let showLengths = true;
+    let snapEnabled = true;
+    let maxLoops = 10;
+    let sliderLayout = "stacked360";
+    let sliderHandleEnd = localStorage.getItem("ksi_slider_handle_end") || "start10";
+    let lastAnimTime = 0;
+    let isCircleDragging = false;
+
+    // Panel collapse state
+    let dataCollapsed = false;
+    let sliderCollapsed = false;
+
+    let showZeroDecimal = localStorage.getItem("ksi_show_zero_decimal") !== "false"; // Default true: shows 9.0°
+
+    function formatDegree(v, withUnit = true) {
+      const rounded = Math.round(v * 10) / 10;
+      let str;
+      if (showZeroDecimal) {
+        str = rounded.toFixed(1);
+      } else {
+        str = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+      }
+      return withUnit ? str + "°" : str;
+    }
+
+    // -------------------------------------------------------------
+    // INTERNATIONALIZATION (i18n): EN & ID with Auto Device Adaptation
+    // -------------------------------------------------------------
+    function detectDeviceLanguage() {
+      const navLang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+      return navLang.startsWith("id") ? "id" : "en";
+    }
+
+    let userLangPref = localStorage.getItem("ksi_lang_pref") || "auto"; // "auto" | "id" | "en"
+    let currentLang = userLangPref === "auto" ? detectDeviceLanguage() : userLangPref;
+
+    const i18n = {
+      en: {
+        appTitle: "INTERACTIVE UNIT CIRCLE",
+        exitFullscreen: "⛶ Exit Fullscreen",
+        valDataTitle: "Trigonometric Values",
+        valDataCollapsed: "VALUES",
+        controlsSliderTitle: "Controls & Slider",
+        controlsSliderCollapsed: "CONTROLS & SLIDER",
+        angleCard: "ANGLE (θ)",
+        sinCard: "SIN (y)",
+        cosCard: "COS (x)",
+        tanCard: "TAN (y/x)",
+        simpleModeBadge: "Simple Mode",
+        loopBadgePrefix: "Loop",
+        noExactBadge: "? No exact form",
+        mode1Loop: "1 Loop",
+        modeCoil: "Loops",
+        modeInfinite: "Curva",
+        infiniteBadge: "Curva",
+        lengthBtn: r => `Length(r=${r})`,
+        play: "▶ Play",
+        pause: "⏸ Pause",
+        snapOn: "🧲",
+        snapOff: "🧲",
+        legendOn: "Legend: ON",
+        legendOff: "Legend: OFF",
+        langBtnText: "ID",
+        langBtnTitle: "Switch to Bahasa Indonesia (Beralih ke Bahasa Indonesia)",
+        legVSlider: "0° → 360° (bottom → top)",
+        legHSlider: "0° → 360° (left → right)",
+        legCoilRuler: "Ruler: −10 to +10 Loops",
+        legInfCurve: "Math Curve: Read-Only (1/10 W)",
+        legCosDesc: "horizontal",
+        legSinDesc: "vertical",
+        legTanDesc: "drop line",
+        legNeedleDesc: "needle ray",
+        settingsTitle: "Settings",
+        lblSetSliderLayout: "Slider Layout",
+        optStacked360: "Stacked 360° (Default)",
+        optStacked180: "Stacked 180°–180° in one line",
+        optContinuous: "1 Slider Only",
+        optCoilCurve: "Coil Math Curve (Visualizing Curve)",
+        lblSetLoops: "Max Loops",
+        optLoop1: "±1 loop (360°)",
+        optLoop3: "±3 loops (1080°)",
+        optLoop5: "±5 loops (1800°)",
+        optLoop10: "±10 loops (3600°)",
+        optLoop25: "±25 loops (9000°)",
+        optLoop50: "±50 loops (18000°)",
+        optLoop100: "±100 loops (36000°)",
+        optLoop150: "±150 loops (54000° - Danger)",
+        lblSetPlayDirection: "Play Direction",
+        optPlayForward: "Forward (+ Counter-Clockwise)",
+        optPlayBackward: "Backward (- Clockwise)",
+        coilComp: c => c === 1 ? "Comp: 1x" : "Comp: /" + c,
+        curveNote: "(Note: Area kurva READ-ONLY, interaksi via diagram)",
+        crashCautionTitle: "Caution: It Might Crash!",
+        crashCautionDesc: "Extreme loop count reached (>100 loops / 36,000°)! The /4 /4 /4 infinite curve compression at extreme density may freeze or crash your browser tab.",
+        crashResetBtn: "Reset to 0°",
+        crashContinueBtn: "Continue Anyway",
+        lblSetSliderHandleEnd: "Slider Handle +End",
+        optStart10: "Start of +10th Slider (Default)",
+        optEnd9: "End of +9th Slider (Hide +10 Bar)",
+        lblSetRadius: "Circle Radius (r)",
+        lblSetTheme: "Color Theme",
+        optThemeSystem: "Auto (System)",
+        optThemeLight: "Light",
+        optThemeDark: "Dark",
+        lblSetLang: "Language / Bahasa",
+        optLangAuto: "Auto (Device)",
+        optLangId: "Bahasa Indonesia",
+        optLangEn: "English",
+        lblSetZeroDecimal: "Degree Decimal (.0)",
+        optZeroDecimalOn: "ON (Always .0, e.g. 9.0°)",
+        optZeroDecimalOff: "OFF (Hide .0 when whole, e.g. 9°)",
+        lblDiagTextTitle: "Diagram Text & Labels",
+        btnAdvancedOpen: "Advanced ▴",
+        btnAdvancedClosed: "Advanced ▾",
+        lblSetShowAllLabels: "Show All Labels",
+        statusAllVisible: "All Visible",
+        statusAllHidden: "All Hidden",
+        statusCustom: "Custom",
+        lblSetTextGlobalSize: "Global Text Size",
+        optSizeSmall: "Small",
+        optSizeMedium: "Medium",
+        optSizeBig: "Big",
+        btnDoneSettings: "Save & Close",
+        loopModalTitle: "Loop Selector",
+        currentLoopTag: "CURRENT LOOP",
+        magnetZeroBtn: "🧲 Magnet 0",
+        resetZeroDeg: "Reset to Exact 0.0°",
+        doneLoopModal: "Done",
+        pillZero: "🧲 Magnet Locked at Loop 0",
+        pillPos: l => `Loop +${l} (Forward)`,
+        pillNeg: l => `Loop ${l} (Backward)`,
+        loopTotalAngle: (a, intra) => `Total: ${a}° (${intra}° in loop)`,
+        rulerTitle: "Click ruler to open Loop Selector (−10 to +10)",
+        exactModalTitle: "No Exact Radical Form",
+        exactModalText: (name, deg) => `At <strong>${deg}</strong>, <em>${name}</em> does not have a "sweet spot" algebraic closed form.<br><br>Exact radical values like ½, √2/2, and √3/2 only occur at multiples of 30° and 45°. Anywhere else, the value is an irrational number without a simple radical expression, so only the decimal approximation is shown.`,
+        btnGotItExact: "Got it",
+        catDegrees: "Degrees (0°–360°)",
+        catRadians: "Radians (π/6, π/4...)",
+        catCoords: "Axis Endpoints (r, −r)",
+        catAxisFrac: "Axis Fractions (r/2, r√2/2, r√3/2)",
+        catAngleBadge: "Needle Angle Badge",
+        catLengthBadges: "Live Length Badges (cos, sin, tan)",
+        catCornerHud: "Corner HUD Values"
+      },
+      id: {
+        appTitle: "LINGKARAN SATUAN INTERAKTIF",
+        exitFullscreen: "⛶ Keluar Layar Penuh",
+        valDataTitle: "Nilai Trigonometri",
+        valDataCollapsed: "NILAI",
+        controlsSliderTitle: "Kontrol & Slider",
+        controlsSliderCollapsed: "KONTROL & SLIDER",
+        angleCard: "SUDUT (θ)",
+        sinCard: "SIN (y)",
+        cosCard: "COS (x)",
+        tanCard: "TAN (y/x)",
+        simpleModeBadge: "Mode Sederhana",
+        loopBadgePrefix: "Putaran",
+        noExactBadge: "? Tanpa bentuk eksak",
+        mode1Loop: "1 Putaran",
+        modeCoil: "Tak Hingga",
+        modeInfinite: " Kurva",
+        infiniteBadge: "Tak Hingga",
+        lengthBtn: r => `Panjang(r=${r})`,
+        play: "▶ Putar",
+        pause: "⏸ Jeda",
+        snapOn: "🧲",
+        snapOff: "🧲",
+        legendOn: "Legenda: AKTIF",
+        legendOff: "Legenda: MATI",
+        langBtnText: "EN",
+        langBtnTitle: "Switch to English (Beralih ke Bahasa Inggris)",
+        legVSlider: "0° → 360° (bawah → atas)",
+        legHSlider: "0° → 360° (kiri → kanan)",
+        legCoilRuler: "Penggaris: −10 s/d +10 Putaran",
+        legInfCurve: "Kurva Matematika: Hanya-Baca",
+        legCosDesc: "horizontal",
+        legSinDesc: "vertikal",
+        legTanDesc: "proyeksi",
+        legNeedleDesc: "jarum sudut",
+        settingsTitle: "Pengaturan",
+        lblSetSliderLayout: "Tata Letak Slider",
+        optStacked360: "Bertumpuk 360° (Bawaan)",
+        optStacked180: "Bertumpuk 180°–180° satu baris",
+        optContinuous: "1 Slider Kontinu",
+        optCoilCurve: "Kurva Matematika Kumparan",
+        lblSetLoops: "Maksimal Putaran",
+        optLoop1: "±1 putaran (360°)",
+        optLoop3: "±3 putaran (1080°)",
+        optLoop5: "±5 putaran (1800°)",
+        optLoop10: "±10 putaran (3600°)",
+        optLoop25: "±25 putaran (9000°)",
+        optLoop50: "±50 putaran (18000°)",
+        optLoop100: "±100 putaran (36000°)",
+        optLoop150: "±150 putaran (54000° - Bahaya)",
+        lblSetPlayDirection: "Arah Putaran",
+        optPlayForward: "Maju (+ Berlawanan Jarum Jam)",
+        optPlayBackward: "Mundur (- Searah Jarum Jam)",
+        coilComp: c => c === 1 ? "Komp: 1x" : "Komp: /" + c,
+        curveNote: "(Catatan: Area kurva READ-ONLY, interaksi via diagram)",
+        crashCautionTitle: "Peringatan: Berisiko Crash!",
+        crashCautionDesc: "Jumlah putaran ekstrem terlampaui (>100 putaran / 36.000°)! Kompresi kurva tak hingga /4 /4 /4 pada kerapatan ekstrem dapat membebani CPU/GPU atau membuat tab browser Anda crash.",
+        crashResetBtn: "Reset ke 0°",
+        crashContinueBtn: "Lanjutkan Saja",
+        lblSetSliderHandleEnd: "Ujung Handle Slider (+Akhir)",
+        optStart10: "Awal Slider ke-10 (Bawaan)",
+        optEnd9: "Ujung Slider ke-9 (Sembunyikan Bar +10)",
+        lblSetRadius: "Jari-jari Lingkaran (r)",
+        lblSetTheme: "Tema Warna",
+        optThemeSystem: "Otomatis (Sistem)",
+        optThemeLight: "Terang",
+        optThemeDark: "Gelap",
+        lblSetLang: "Bahasa / Language",
+        optLangAuto: "Otomatis (Perangkat)",
+        optLangId: "Bahasa Indonesia",
+        optLangEn: "English",
+        lblSetZeroDecimal: "Desimal Sudut (.0)",
+        optZeroDecimalOn: "AKTIF (Selalu .0, misal 9.0°)",
+        optZeroDecimalOff: "MATI (Sembunyikan .0 jika bulat, misal 9°)",
+        lblDiagTextTitle: "Teks & Label Diagram",
+        btnAdvancedOpen: "Lanjutan ▴",
+        btnAdvancedClosed: "Lanjutan ▾",
+        lblSetShowAllLabels: "Tampilkan Semua Label",
+        statusAllVisible: "Semua Tampil",
+        statusAllHidden: "Semua Sembunyi",
+        statusCustom: "Kustom",
+        lblSetTextGlobalSize: "Ukuran Teks Global",
+        optSizeSmall: "Kecil",
+        optSizeMedium: "Sedang",
+        optSizeBig: "Besar",
+        btnDoneSettings: "Simpan & Tutup",
+        loopModalTitle: "Pemilih Putaran",
+        currentLoopTag: "PUTARAN SAAT INI",
+        magnetZeroBtn: "🧲 Magnet 0",
+        resetZeroDeg: "Reset ke Tepat 0.0°",
+        doneLoopModal: "Selesai",
+        pillZero: "🧲 Terkunci Magnet di Putaran 0",
+        pillPos: l => `Putaran +${l} (Maju)`,
+        pillNeg: l => `Putaran ${l} (Mundur)`,
+        loopTotalAngle: (a, intra) => `Total: ${a}° (${intra}° dlm putaran)`,
+        rulerTitle: "Klik mistar untuk membuka Pemilih Putaran (−10 hingga +10)",
+        exactModalTitle: "Tidak Ada Bentuk Eksak Akar",
+        exactModalText: (name, deg) => `Pada sudut <strong>${deg}</strong>, <em>${name}</em> tidak memiliki bentuk aljabar akar tertutup yang sederhana.<br><br>Nilai akar eksak (seperti ½, √2/2, dan √3/2) hanya ada pada kelipatan 30° dan 45°. Pada sudut lainnya, nilainya adalah bilangan irasional tanpa ekspresi akar sederhana, sehingga hanya nilai pendekatan desimal yang ditampilkan.`,
+        btnGotItExact: "Mengerti",
+        catDegrees: "Derajat (0°–360°)",
+        catRadians: "Radian (π/6, π/4...)",
+        catCoords: "Titik Sumbu (r, −r)",
+        catAxisFrac: "Pecahan Sumbu (r/2, r√2/2, r√3/2)",
+        catAngleBadge: "Badge Sudut Jarum",
+        catLengthBadges: "Badge Nilai Panjang (cos, sin, tan)",
+        catCornerHud: "Nilai HUD Sudut Layar"
+      }
+    };
+
+    function syncPlayButtons() {
+      const curL = i18n[currentLang] || i18n.en;
+      const bPlay = document.getElementById("btnPlay");
+      if (bPlay) {
+        bPlay.textContent = isPlaying ? curL.pause : curL.play;
+        bPlay.classList.toggle("active", isPlaying);
+      }
+      const bColPlay = document.getElementById("btnCollapsedPlay");
+      if (bColPlay) {
+        bColPlay.textContent = isPlaying ? "⏸" : "▶";
+        bColPlay.classList.toggle("active", isPlaying);
+        bColPlay.title = isPlaying ? curL.pause : curL.play;
+      }
+    }
+
+    function syncSnapButtons() {
+      const curL = i18n[currentLang] || i18n.en;
+      const bSnap = document.getElementById("btnSnap");
+      if (bSnap) {
+        bSnap.classList.toggle("on", snapEnabled);
+        bSnap.textContent = snapEnabled ? curL.snapOn : curL.snapOff;
+      }
+      const bColSnap = document.getElementById("btnCollapsedSnap");
+      if (bColSnap) {
+        bColSnap.classList.toggle("on", snapEnabled);
+        bColSnap.title = currentLang === "id" ? (snapEnabled ? "Magnet: AKTIF" : "Magnet: MATI") : (snapEnabled ? "Magnet: ON" : "Magnet: OFF");
+      }
+    }
+
+    function applyLanguage() {
+      const lang = i18n[currentLang] || i18n.en;
+
+      // Header
+      const titleEl = document.querySelector(".fullscreen-title-bar h1");
+      if (titleEl) titleEl.textContent = lang.appTitle;
+      const exitBtn = document.getElementById("btnExitFullscreen");
+      if (exitBtn) exitBtn.textContent = lang.exitFullscreen;
+
+      // Panels
+      const valTitle = document.getElementById("valDataTitle");
+      if (valTitle) valTitle.textContent = lang.valDataTitle;
+      const lblExpData = document.getElementById("labelExpandData");
+      if (lblExpData) lblExpData.textContent = lang.valDataCollapsed;
+
+      const colSliderTitle = document.querySelector(".col-slider .panel-title-text span");
+      if (colSliderTitle) colSliderTitle.textContent = lang.controlsSliderTitle;
+      const lblExpSlider = document.getElementById("labelExpandSlider");
+      if (lblExpSlider) lblExpSlider.textContent = lang.controlsSliderCollapsed;
+
+      // Value Card Labels
+      const lblAngle = document.getElementById("lblAngleCard");
+      if (lblAngle) lblAngle.textContent = lang.angleCard;
+      const lblSin = document.getElementById("lblSinCard");
+      if (lblSin) lblSin.textContent = lang.sinCard;
+      const lblCos = document.getElementById("lblCosCard");
+      if (lblCos) lblCos.textContent = lang.cosCard;
+      const lblTan = document.getElementById("lblTanCard");
+      if (lblTan) lblTan.textContent = lang.tanCard;
+
+      // Diagram toolbar buttons
+      const bSimple = document.getElementById("btnModeSimple");
+      if (bSimple) bSimple.textContent = lang.mode1Loop;
+      const bCoil = document.getElementById("btnModeCoil");
+      if (bCoil) bCoil.textContent = lang.modeCoil;
+      const bInf = document.getElementById("btnModeInfinite");
+      if (bInf) bInf.textContent = lang.modeInfinite;
+      const bLen = document.getElementById("btnLengths");
+      if (bLen) {
+        const span = bLen.querySelector("span") || bLen;
+        span.textContent = lang.lengthBtn(circleRadius);
+      }
+
+      // Play & Snap buttons (both expanded and collapsed strip)
+      syncPlayButtons();
+      syncSnapButtons();
+      const bMinus = document.getElementById("btnCollapsedMinus");
+      if (bMinus) bMinus.title = currentLang === "id" ? "Putar mundur (−360°)" : "Rotate backward (−360°)";
+      const bPlus = document.getElementById("btnCollapsedPlus");
+      if (bPlus) bPlus.title = currentLang === "id" ? "Putar maju (+360°)" : "Rotate forward (+360°)";
+
+      const bLeg = document.getElementById("btnToggleLegend");
+      if (bLeg) bLeg.textContent = (typeof legendShown === "undefined" || legendShown) ? lang.legendOn : lang.legendOff;
+      const noteCurve = document.getElementById("coilCurveNote");
+      if (noteCurve && lang.curveNote) noteCurve.textContent = lang.curveNote;
+
+      // Language button
+      const bLang = document.getElementById("btnLang");
+      const bLangText = document.getElementById("btnLangText");
+      if (bLangText) bLangText.textContent = lang.langBtnText;
+      if (bLang) bLang.title = lang.langBtnTitle;
+
+      // Legend Items
+      updateLegend();
+
+      // Settings Modal
+      const sTitle = document.getElementById("settingsModalTitle");
+      if (sTitle) sTitle.textContent = lang.settingsTitle;
+      const lblSetLayout = document.getElementById("lblSetSliderLayout");
+      if (lblSetLayout) lblSetLayout.textContent = lang.lblSetSliderLayout;
+
+      const selLayout = document.getElementById("setSliderLayout");
+      if (selLayout && selLayout.options) {
+        if (selLayout.options[0]) selLayout.options[0].text = lang.optStacked360;
+        if (selLayout.options[1]) selLayout.options[1].text = lang.optStacked180;
+        if (selLayout.options[2]) selLayout.options[2].text = lang.optContinuous;
+        if (selLayout.options[3]) selLayout.options[3].text = lang.optCoilCurve;
+      }
+
+      const lblSetL = document.getElementById("lblSetLoops");
+      if (lblSetL) lblSetL.textContent = lang.lblSetLoops;
+      const selLoops = document.getElementById("setLoops");
+      if (selLoops && selLoops.options) {
+        if (selLoops.options[0]) selLoops.options[0].text = lang.optLoop1;
+        if (selLoops.options[1]) selLoops.options[1].text = lang.optLoop3;
+        if (selLoops.options[2]) selLoops.options[2].text = lang.optLoop5;
+        if (selLoops.options[3]) selLoops.options[3].text = lang.optLoop10;
+        if (selLoops.options[4]) selLoops.options[4].text = lang.optLoop25;
+        if (selLoops.options[5]) selLoops.options[5].text = lang.optLoop50;
+        if (selLoops.options[6]) selLoops.options[6].text = lang.optLoop100;
+        if (selLoops.options[7]) selLoops.options[7].text = lang.optLoop150;
+      }
+
+      const lblSetDir = document.getElementById("lblSetPlayDirection");
+      if (lblSetDir) lblSetDir.textContent = lang.lblSetPlayDirection;
+      const selDir = document.getElementById("setPlayDirection");
+      if (selDir && selDir.options) {
+        if (selDir.options[0]) selDir.options[0].text = lang.optPlayForward;
+        if (selDir.options[1]) selDir.options[1].text = lang.optPlayBackward;
+        selDir.value = playDirection;
+      }
+
+      const lblSetHandle = document.getElementById("lblSetSliderHandleEnd");
+      if (lblSetHandle) lblSetHandle.textContent = lang.lblSetSliderHandleEnd;
+      const selHandle = document.getElementById("setSliderHandleEnd");
+      if (selHandle && selHandle.options) {
+        if (selHandle.options[0]) selHandle.options[0].text = lang.optStart10;
+        if (selHandle.options[1]) selHandle.options[1].text = lang.optEnd9;
+      }
+
+      const lblSetR = document.getElementById("lblSetRadius");
+      if (lblSetR) lblSetR.textContent = lang.lblSetRadius;
+
+      const lblSetT = document.getElementById("lblSetTheme");
+      if (lblSetT) lblSetT.textContent = lang.lblSetTheme;
+      const selTheme = document.getElementById("setTheme");
+      if (selTheme && selTheme.options) {
+        if (selTheme.options[0]) selTheme.options[0].text = lang.optThemeSystem;
+        if (selTheme.options[1]) selTheme.options[1].text = lang.optThemeLight;
+        if (selTheme.options[2]) selTheme.options[2].text = lang.optThemeDark;
+      }
+
+      const lblLang = document.getElementById("lblSetLang");
+      if (lblLang) lblLang.textContent = lang.lblSetLang;
+      const selLang = document.getElementById("setLang");
+      if (selLang && selLang.options) {
+        if (selLang.options[0]) selLang.options[0].text = lang.optLangAuto;
+        if (selLang.options[1]) selLang.options[1].text = lang.optLangId;
+        if (selLang.options[2]) selLang.options[2].text = lang.optLangEn;
+        selLang.value = userLangPref;
+      }
+
+      const lblZeroDec = document.getElementById("lblSetZeroDecimal");
+      if (lblZeroDec) lblZeroDec.textContent = lang.lblSetZeroDecimal;
+      const selZeroDec = document.getElementById("setZeroDecimal");
+      if (selZeroDec && selZeroDec.options) {
+        if (selZeroDec.options[0]) selZeroDec.options[0].text = lang.optZeroDecimalOn;
+        if (selZeroDec.options[1]) selZeroDec.options[1].text = lang.optZeroDecimalOff;
+        selZeroDec.value = showZeroDecimal ? "true" : "false";
+      }
+
+      const lblDiagT = document.getElementById("lblDiagTextTitle");
+      if (lblDiagT) lblDiagT.textContent = lang.lblDiagTextTitle;
+
+      const btnAdv = document.getElementById("btnToggleAdvancedText");
+      if (btnAdv) btnAdv.textContent = (typeof advancedTextOpen !== "undefined" && advancedTextOpen) ? lang.btnAdvancedOpen : lang.btnAdvancedClosed;
+
+      const lblShowAll = document.getElementById("lblSetShowAllLabels");
+      if (lblShowAll) lblShowAll.textContent = lang.lblSetShowAllLabels;
+
+      const lblGlobalSz = document.getElementById("lblSetTextGlobalSize");
+      if (lblGlobalSz) lblGlobalSz.textContent = lang.lblSetTextGlobalSize;
+      const selGlobalSz = document.getElementById("setTextGlobalSize");
+      if (selGlobalSz && selGlobalSz.options) {
+        if (selGlobalSz.options[0]) selGlobalSz.options[0].text = lang.optSizeSmall;
+        if (selGlobalSz.options[1]) selGlobalSz.options[1].text = lang.optSizeMedium;
+        if (selGlobalSz.options[2]) selGlobalSz.options[2].text = lang.optSizeBig;
+      }
+
+      const btnDoneS = document.getElementById("btnDoneSettings");
+      if (btnDoneS) btnDoneS.textContent = lang.btnDoneSettings;
+
+      // Text Config categories names
+      if (textConfig.degrees) textConfig.degrees.name = lang.catDegrees;
+      if (textConfig.radians) textConfig.radians.name = lang.catRadians;
+      if (textConfig.coords) textConfig.coords.name = lang.catCoords;
+      if (textConfig.axisFrac) textConfig.axisFrac.name = lang.catAxisFrac;
+      if (textConfig.angleBadge) textConfig.angleBadge.name = lang.catAngleBadge;
+      if (textConfig.lengthBadges) textConfig.lengthBadges.name = lang.catLengthBadges;
+      if (textConfig.cornerHud) textConfig.cornerHud.name = lang.catCornerHud;
+      if (typeof renderTextSettingsTable === "function") renderTextSettingsTable();
+      if (typeof checkShowAllStatus === "function") checkShowAllStatus();
+
+      // Exact Modal
+      const exactT = document.querySelector("#exactModal .modal-header h3");
+      if (exactT) exactT.textContent = lang.exactModalTitle;
+      const btnGotIt = document.getElementById("btnGotItExact");
+      if (btnGotIt) btnGotIt.textContent = lang.btnGotItExact;
+
+      // Crash Caution Modal
+      const crashTitle = document.getElementById("crashCautionTitle");
+      if (crashTitle) crashTitle.textContent = lang.crashCautionTitle;
+      const crashDesc = document.getElementById("crashCautionDesc");
+      if (crashDesc) crashDesc.textContent = lang.crashCautionDesc;
+      const btnCrashReset = document.getElementById("btnCrashResetZero");
+      if (btnCrashReset) btnCrashReset.textContent = lang.crashResetBtn;
+      const btnCrashCont = document.getElementById("btnCrashContinue");
+      if (btnCrashCont) btnCrashCont.textContent = lang.crashContinueBtn;
+
+      // Update Data Cards
+      updateDataCards();
+    }
+
+    const clampAngle = v => {
+      if (activeMode === "simple") {
+        return Math.max(0, Math.min(360, v));
+      }
+      if (activeMode === "infinite") {
+        const infCap = 500 * 360;
+        return Math.max(-infCap, Math.min(infCap, v));
+      }
+      const cap = maxLoops * 360;
+      return Math.max(-cap, Math.min(cap, v));
+    };
+
+    function snapAngle(v) {
+      const t = nrm(v);
+      const b = S.concat(360).reduce((x, s) => Math.abs(s - t) < Math.abs(x - t) ? s : x);
+      return Math.abs(b - t) < 3.8 ? Math.round(v + b - t) : Math.round(v * 10) / 10;
+    }
+
+    // -------------------------------------------------------------
+    // DATA PANEL UPDATE
+    // -------------------------------------------------------------
+    function updateDataCards() {
+      const rad = angle * Math.PI / 180;
+      const degFormatted = formatDegree(angle);
+      const n = nrm(angle);
+      const isInt = Number.isInteger(angle);
+
+      const currentLoop = Math.floor(angle / 360);
+      const curL = i18n[currentLang] || i18n.en;
+      let badgeStr = "";
+      if (activeMode === "simple") {
+        badgeStr = curL.simpleModeBadge;
+      } else if (activeMode === "infinite") {
+        const sign = currentLoop >= 0 ? `+${currentLoop + 1}` : `${currentLoop}`;
+        badgeStr = `${curL.infiniteBadge} (${curL.loopBadgePrefix} ${sign})`;
+      } else {
+        const loopText = currentLoop >= 0 ? `${curL.loopBadgePrefix} +${currentLoop + 1}` : `${curL.loopBadgePrefix} ${currentLoop}`;
+        badgeStr = loopText;
+      }
+      document.getElementById("loopBadge").textContent = badgeStr;
+
+      const sweetRad = radFormatted(angle, true);
+      document.getElementById("valDegRad").innerHTML = sweetRad || (rad).toFixed(3) + " rad";
+      document.getElementById("valDegDec").textContent = degFormatted;
+
+      function setCard(idExact, idDec, idBadge, exactVal, decVal, labelName) {
+        const elExact = document.getElementById(idExact);
+        const elDec = document.getElementById(idDec);
+        const elBadge = document.getElementById(idBadge);
+
+        if (exactVal !== null) {
+          elExact.innerHTML = exactVal;
+          elBadge.innerHTML = "";
+        } else {
+          elExact.innerHTML = `<span style="color:var(--mute); font-size:16px;">—</span>`;
+          elBadge.innerHTML = `<button class="no-sweet-badge" onclick="showExactInfo('${labelName}', '${degFormatted}')">${curL.noExactBadge}</button>`;
+        }
+        elDec.textContent = decVal;
+      }
+
+      const se = isInt ? exactHtml(sinRef(n)) : null;
+      setCard("valSinExact", "valSinDec", "badgeSin", se, f3(circleRadius * Math.sin(rad)), "Sin");
+
+      const ce = isInt ? exactHtml(sinRef(90 - n)) : null;
+      setCard("valCosExact", "valCosDec", "badgeCos", ce, f3(circleRadius * Math.cos(rad)), "Cos");
+
+      if (Math.abs(Math.cos(rad)) < 1e-9) {
+        document.getElementById("valTanExact").innerHTML = "undefined";
+        document.getElementById("badgeTan").innerHTML = "";
+        document.getElementById("valTanDec").textContent = "—";
+      } else {
+        let tx = null;
+        if (isInt) {
+          const m = n % 180, rf = m > 90 ? 180 - m : m;
+          const t = { 0: "0", 30: fr("√3", 3), 45: "1", 60: "√3" }[rf];
+          if (t != null) tx = (m > 90 && rf ? "−" : "") + t;
+        }
+        setCard("valTanExact", "valTanDec", "badgeTan", tx, f3(circleRadius * Math.tan(rad)), "Tan");
+      }
+
+      // Update Diagram 4-Corner HUD (Top-L: Degree, Top-R: Sin, Bottom-L: Cos, Bottom-R: Tan)
+      const hudAngleSweet = document.getElementById("hudAngleSweet");
+      const hudAngleDec = document.getElementById("hudAngleDec");
+      if (hudAngleSweet && hudAngleDec) {
+        hudAngleDec.textContent = degFormatted;
+        hudAngleSweet.innerHTML = sweetRad ? `(${sweetRad})` : `(${rad.toFixed(2)} rad)`;
+      }
+
+      const hudSinSweet = document.getElementById("hudSinSweet");
+      const hudSinDec = document.getElementById("hudSinDec");
+      if (hudSinSweet && hudSinDec) {
+        hudSinDec.textContent = f3(circleRadius * Math.sin(rad));
+        hudSinSweet.innerHTML = se ? `(${se})` : "";
+      }
+
+      const hudCosSweet = document.getElementById("hudCosSweet");
+      const hudCosDec = document.getElementById("hudCosDec");
+      if (hudCosSweet && hudCosDec) {
+        hudCosDec.textContent = f3(circleRadius * Math.cos(rad));
+        hudCosSweet.innerHTML = ce ? `(${ce})` : "";
+      }
+
+      const hudTanSweet = document.getElementById("hudTanSweet");
+      const hudTanDec = document.getElementById("hudTanDec");
+      if (hudTanSweet && hudTanDec) {
+        if (Math.abs(Math.cos(rad)) < 1e-9) {
+          hudTanDec.textContent = "undefined";
+          hudTanSweet.textContent = "";
+        } else {
+          let tx = null;
+          if (isInt) {
+            const m = n % 180, rf = m > 90 ? 180 - m : m;
+            const t = { 0: "0", 30: fr("√3", 3), 45: "1", 60: "√3" }[rf];
+            if (t != null) tx = (m > 90 && rf ? "−" : "") + t;
+          }
+          hudTanDec.textContent = f3(circleRadius * Math.tan(rad));
+          hudTanSweet.innerHTML = tx ? `(${tx})` : "";
+        }
+      }
+    }
+
+    window.showExactInfo = function (name, deg) {
+      const curL = i18n[currentLang] || i18n.en;
+      document.getElementById("exactModalText").innerHTML = curL.exactModalText(name, deg);
+      document.getElementById("exactModal").classList.add("open");
+    };
+
+    // -------------------------------------------------------------
+    // DIAGRAM CANVAS DRAWING (RINGS, LENGTHS, NEEDLE)
+    // -------------------------------------------------------------
+    function drawDiagram() {
+      dynGroup.innerHTML = "";
+      const an = nrm(angle);
+      const rad = an * Math.PI / 180;
+      const cosR = Math.cos(rad);
+      const sinR = Math.sin(rad);
+      const px = cx + R * cosR;
+      const py = cy - R * sinR;
+
+      if (activeMode === "coil") {
+        const isFwd = angle >= 0;
+        const currentLoopIdx = Math.min(10, Math.floor(Math.abs(angle) / 360) + 1);
+        const ringSpacing = 7;
+        const baseRingR = 40;
+        const activeCoilColor = isFwd ? "var(--blue)" : "var(--needle-col)";
+
+        for (let i = 1; i <= 10; i++) {
+          const ringR = baseRingR + i * ringSpacing;
+          if (ringR < R - 24) {
+            const isCurrent = (i === currentLoopIdx);
+            const isCompleted = (i < currentLoopIdx);
+            const circleProps = {
+              cx, cy, r: ringR,
+              fill: "none",
+              stroke: isCurrent ? activeCoilColor : (isCompleted ? "var(--needle-col)" : "var(--ring)"),
+              "stroke-width": isCurrent ? 2.4 : 1.2,
+              "stroke-dasharray": isCurrent ? (isFwd ? "none" : "4 2.5") : "3 3",
+              opacity: isCurrent ? 0.95 : (isCompleted ? 0.5 : 0.25)
+            };
+            if (i === 10) circleProps.id = "biggestRingLoop";
+            el("circle", circleProps, dynGroup);
+          }
+        }
+      } else if (activeMode === "infinite") {
+        const loopCount = Math.floor(Math.abs(angle) / 360);
+        const isFwd = angle >= 0;
+        const ringSpacing = 7;
+        const baseRingR = 40;
+        const coilColor = isFwd ? "var(--blue)" : "var(--needle-col)";
+
+        // Subtle outer reference circle corresponding to max 10L ring boundary (r = 110, diameter = 220)
+        el("circle", {
+          id: "biggestRingLoop",
+          cx, cy, r: 110,
+          fill: "none",
+          stroke: "var(--ring)",
+          "stroke-width": 1.2,
+          "stroke-dasharray": "3 3",
+          opacity: 0.35
+        }, dynGroup);
+
+        if (loopCount > 0) {
+          const maxVisualRings = Math.min(loopCount, 10);
+          for (let i = 1; i <= maxVisualRings; i++) {
+            const ringR = baseRingR + i * ringSpacing;
+            if (ringR <= 110) {
+              el("circle", {
+                cx, cy, r: ringR,
+                fill: "none",
+                stroke: coilColor,
+                "stroke-width": 1.8,
+                "stroke-dasharray": isFwd ? "none" : "4 2.5",
+                opacity: 0.3 + (i / maxVisualRings) * 0.6
+              }, dynGroup);
+            }
+          }
+        }
+      }
+
+      const wr = 46;
+      el("path", {
+        d: `M${cx},${cy} L${cx + wr},${cy} A${wr},${wr} 0 ${an > 180 ? 1 : 0} 0 ${cx + wr * cosR},${cy - wr * sinR} Z`,
+        fill: "var(--len-subtle)",
+        stroke: "var(--len-col)",
+        "stroke-width": 1.5
+      }, dynGroup);
+
+      if (showLengths) {
+        // Horizontal Leg (LENGTH = YELLOW)
+        el("line", {
+          x1: cx, y1: cy, x2: px, y2: cy,
+          stroke: "var(--len-col)", "stroke-width": 3.5, "stroke-linecap": "round"
+        }, dynGroup);
+
+        // Vertical Leg (LENGTH = YELLOW)
+        el("line", {
+          x1: px, y1: cy, x2: px, y2: py,
+          stroke: "var(--len-col)", "stroke-width": 3.5, "stroke-linecap": "round"
+        }, dynGroup);
+
+        // Dashed drop line to y-axis
+        el("line", {
+          x1: cx, y1: py, x2: px, y2: py,
+          stroke: "var(--mute)", "stroke-width": 1.2, "stroke-dasharray": "4 3", opacity: 0.6
+        }, dynGroup);
+
+        // Tangent projection line (LENGTH = YELLOW)
+        let hasTan = false;
+        let tanY = 0;
+        if (Math.abs(cosR) > 0.05) {
+          const tanVal = Math.tan(rad);
+          tanY = cy - R * tanVal;
+          if (tanY >= cy - R * 2.2 && tanY <= cy + R * 2.2) {
+            hasTan = true;
+            el("line", {
+              x1: cx + R, y1: cy, x2: cx + R, y2: tanY,
+              stroke: "var(--len-col)", "stroke-width": 2.2, "stroke-dasharray": "3 3", opacity: 0.9
+            }, dynGroup);
+          }
+        }
+
+        // Live calculation values directly on length sides (turnoff-able in Settings):
+        if (textConfig.lengthBadges.show) {
+          const lFs = getFontSize("lengthBadges", 11, 9.5, 13);
+          const lH = getFontSize("lengthBadges", 17, 15, 20);
+          const cosVal = (circleRadius * cosR).toFixed(3);
+          const cosTextX = (cx + px) / 2;
+          const cosTextY = cy + (sinR >= 0 ? 18 : -18);
+          badgeText(cosTextX, cosTextY, cosVal, "var(--len-col)", "var(--card-bg)", "var(--len-col)", "middle", dynGroup, lFs, lH);
+
+          const sinVal = (circleRadius * sinR).toFixed(3);
+          const sinTextX = px + (cosR >= 0 ? 14 : -14);
+          const sinTextY = (cy + py) / 2;
+          const sinAnchor = cosR >= 0 ? "start" : "end";
+          badgeText(sinTextX, sinTextY, sinVal, "var(--len-col)", "var(--card-bg)", "var(--len-col)", sinAnchor, dynGroup, lFs, lH);
+
+          if (hasTan) {
+            const tanVal = (circleRadius * Math.tan(rad)).toFixed(3);
+            badgeText(cx + R + 14, (cy + tanY) / 2, tanVal, "var(--len-col)", "var(--card-bg)", "var(--len-col)", "start", dynGroup, lFs, lH);
+          }
+        }
+      }
+
+      // Needle (Jarum) & Handle (RED)
+      el("line", {
+        x1: cx, y1: cy, x2: px, y2: py,
+        stroke: "var(--needle-col)", "stroke-width": 4.5, "stroke-linecap": "round"
+      }, dynGroup);
+
+      el("circle", { cx: px, cy: py, r: 18, fill: "var(--needle-subtle)", style: "cursor: grab;" }, dynGroup);
+      el("circle", {
+        cx: px, cy: py, r: 9, fill: "var(--needle-col)", stroke: "#fff", "stroke-width": 2.5,
+        style: "cursor: grab;"
+      }, dynGroup);
+
+      // Safe outer positioning for degree label to avoid colliding with axis fraction ticks:
+      if (textConfig.angleBadge.show) {
+        const aFs = getFontSize("angleBadge", 11.5, 10, 14);
+        const aH = getFontSize("angleBadge", 18, 15, 22);
+        const labelDist = R + 24;
+        let lx = cx + labelDist * cosR;
+        let ly = cy - labelDist * sinR;
+        let anchor = "middle";
+
+        if (Math.abs(cosR) > 0.9) {
+          lx = px;
+          ly = py - 18;
+          anchor = "middle";
+        } else if (Math.abs(sinR) > 0.9) {
+          lx = px + (cosR >= 0 ? 22 : -22);
+          ly = py;
+          anchor = cosR >= 0 ? "start" : "end";
+        }
+
+        badgeText(lx, ly, formatDegree(angle), "var(--needle-col)", "var(--card-bg)", "var(--needle-col)", anchor, dynGroup, aFs, aH);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SLIDER RENDERING (3 MODES IN SETTINGS)
+    // -------------------------------------------------------------
+    const sliderContainer = document.getElementById("sliderContainer");
+
+    function renderSlider() {
+      sliderContainer.innerHTML = "";
+
+      if (activeMode === "infinite" || (!isSimpleMode && sliderLayout === "coilCurve")) {
+        renderCoilCurve();
+        updateCoilCurve();
+        return;
+      }
+
+      if (isSimpleMode) {
+        const isPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+        const normAngle = ((Math.round(angle) % 360) + 360) % 360;
+        const pct = Math.max(0, Math.min(1, normAngle / 360));
+
+        if (isPortrait) {
+          // Horizontal Slider for Portrait (1 Loop 0°–360°)
+          const wrap = document.createElement("div");
+          wrap.className = "simple-slider-h";
+          wrap.innerHTML = `
+        
+            <div class="simple-track-bar-h" id="simpleBarH">
+              <div class="simple-track-fill-h" id="simpleFillH"></div>
+              <div class="simple-thumb-h" id="simpleThumbH"></div>
+            </div>
+            <div class="simple-ticks-h">
+              <span>0°</span>
+              <span>90°</span>
+              <span>180°</span>
+              <span>270°</span>
+              <span>360°</span>
+            </div>
+          `;
+          sliderContainer.appendChild(wrap);
+
+          const bar = wrap.querySelector("#simpleBarH");
+          const fill = wrap.querySelector("#simpleFillH");
+          const thumb = wrap.querySelector("#simpleThumbH");
+          fill.style.width = (pct * 100) + "%";
+          thumb.style.left = (pct * 100) + "%";
+
+          function setSimpleH(e) {
+            const rect = bar.getBoundingClientRect();
+            const f = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const val = f * 360;
+            angle = clampAngle(snapEnabled ? snapAngle(val) : Math.round(val));
+            updateAll();
+          }
+
+          bar.onpointerdown = e => {
+            isPlaying = false;
+            document.getElementById("btnPlay").textContent = "▶ Play";
+            bar.setPointerCapture(e.pointerId);
+            setSimpleH(e);
+            bar.onpointermove = setSimpleH;
+            bar.onpointerup = () => { bar.onpointermove = null; };
+          };
+        } else {
+          // Vertical Slider for Landscape (1 Loop 0°–360°)
+          const wrap = document.createElement("div");
+          wrap.className = "simple-slider-v";
+          wrap.innerHTML = `
+         
+            <div class="simple-track-bar-v" id="simpleBarV">
+              <div class="simple-track-fill-v" id="simpleFillV"></div>
+              <div class="simple-thumb-v" id="simpleThumbV"></div>
+            </div>
+          `;
+          sliderContainer.appendChild(wrap);
+
+          const bar = wrap.querySelector("#simpleBarV");
+          const fill = wrap.querySelector("#simpleFillV");
+          const thumb = wrap.querySelector("#simpleThumbV");
+          fill.style.height = (pct * 100) + "%";
+          thumb.style.bottom = (pct * 100) + "%";
+
+          function setSimpleV(e) {
+            const rect = bar.getBoundingClientRect();
+            const f = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+            const val = f * 360;
+            angle = clampAngle(snapEnabled ? snapAngle(val) : Math.round(val));
+            updateAll();
+          }
+
+          bar.onpointerdown = e => {
+            isPlaying = false;
+            document.getElementById("btnPlay").textContent = "▶ Play";
+            bar.setPointerCapture(e.pointerId);
+            setSimpleV(e);
+            bar.onpointermove = setSimpleV;
+            bar.onpointerup = () => { bar.onpointermove = null; };
+          };
+        }
+      } else if (sliderLayout === "stacked180") {
+        const wrap = document.createElement("div");
+        wrap.className = "dual-split-wrap";
+        wrap.innerHTML = `
+          <div class="split-col" id="col180Upper">
+            <span class="split-col-label">0°–180° (sin≥0)</span>
+            <div class="split-bar" id="bar180Upper">
+              <div class="v-track-fill" id="fill180Upper"></div>
+              <div class="v-thumb" id="thumb180Upper"></div>
+            </div>
+          </div>
+          <div class="split-col" id="col180Lower">
+            <span class="split-col-label">180°–360° (sin≤0)</span>
+            <div class="split-bar" id="bar180Lower">
+              <div class="v-track-fill" id="fill180Lower"></div>
+              <div class="v-thumb" id="thumb180Lower"></div>
+            </div>
+          </div>
+        `;
+        sliderContainer.appendChild(wrap);
+
+        const barU = wrap.querySelector("#bar180Upper");
+        const barL = wrap.querySelector("#bar180Lower");
+
+        function set180(e, isLower) {
+          const targetBar = isLower ? barL : barU;
+          const rect = targetBar.getBoundingClientRect();
+          const f = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+          const currentLoop = Math.floor(angle / 360);
+          const raw = currentLoop * 360 + (isLower ? 180 + f * 180 : f * 180);
+          angle = clampAngle(snapEnabled ? snapAngle(raw) : Math.round(raw));
+          updateAll();
+        }
+
+        barU.onpointerdown = e => {
+          isPlaying = false;
+          document.getElementById("btnPlay").textContent = "▶ Play";
+          barU.setPointerCapture(e.pointerId);
+          set180(e, false);
+          barU.onpointermove = ev => set180(ev, false);
+          barU.onpointerup = () => { barU.onpointermove = null; };
+        };
+
+        barL.onpointerdown = e => {
+          isPlaying = false;
+          document.getElementById("btnPlay").textContent = "▶ Play";
+          barL.setPointerCapture(e.pointerId);
+          set180(e, true);
+          barL.onpointermove = ev => set180(ev, true);
+          barL.onpointerup = () => { barL.onpointermove = null; };
+        };
+        update180Slider();
+      } else if (sliderLayout === "continuous") {
+        const wrap = document.createElement("div");
+        wrap.className = "single-continuous-wrap";
+        const maxVal = maxLoops * 360;
+
+        wrap.innerHTML = `
+          <div class="single-ticks-col">
+            <span>+${maxLoops}</span>
+            <span>+${Math.round(maxLoops / 2)}</span>
+            <span>0</span>
+            <span>-${Math.round(maxLoops / 2)}</span>
+            <span>-${maxLoops}</span>
+          </div>
+          <div class="single-cont-bar" id="singleContBar">
+            <div class="single-cont-fill" id="singleContFill"></div>
+            <div class="single-cont-thumb" id="singleContThumb"></div>
+          </div>
+        `;
+        sliderContainer.appendChild(wrap);
+
+        const bar = wrap.querySelector("#singleContBar");
+
+        function setContinuous(e) {
+          const rect = bar.getBoundingClientRect();
+          const f = Math.max(0, Math.min(1, 1 - (e.clientY - rect.top) / rect.height));
+          const val = -maxVal + f * (2 * maxVal);
+          angle = clampAngle(snapEnabled ? snapAngle(val) : Math.round(val));
+          updateAll();
+        }
+
+        bar.onpointerdown = e => {
+          isPlaying = false;
+          document.getElementById("btnPlay").textContent = "▶ Play";
+          bar.setPointerCapture(e.pointerId);
+          setContinuous(e);
+          bar.onpointermove = setContinuous;
+          bar.onpointerup = () => { bar.onpointermove = null; };
+        };
+        updateContinuousSlider();
+      } else if (sliderLayout === "coilCurve") {
+        renderCoilCurve();
+        updateCoilCurve();
+      } else {
+        const isPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+        const allLoops = [];
+        if (isPortrait) {
+          // Portrait (rows stacked vertically top to bottom: +10 top, -10 bottom)
+          for (let m = maxLoops; m >= -maxLoops; m--) {
+            allLoops.push(m);
+          }
+        } else {
+          // Landscape (columns arranged horizontally left to right: -10 makin kiri, +10 makin kanan)
+          for (let m = -maxLoops; m <= maxLoops; m++) {
+            allLoops.push(m);
+          }
+        }
+
+        function getMilestoneLabel(m) {
+          const abs = Math.abs(m);
+          // 0 is removed to prevent crowded overlap in the middle
+          if (m === 0) return "";
+          if (abs === 10 || abs === 5 || abs === 1) {
+            return m > 0 ? `+${m}` : `${m}`;
+          }
+          return "";
+        }
+
+        function isMilestoneLoop(m) {
+          const abs = Math.abs(m);
+          if (m === 0) return false;
+          return abs === 10 || abs === 5 || abs === 1;
+        }
+
+        const curL = i18n[currentLang] || i18n.en;
+
+        if (isPortrait) {
+          // Mode 1-H: Portrait Horizontal Stacked Slider (======)
+          const tracksWrap = document.createElement("div");
+          tracksWrap.className = "tracks-horizontal";
+
+          allLoops.forEach(m => {
+            const row = document.createElement("div");
+            row.className = "h-track-row";
+            row.dataset.loop = m;
+
+            const label = getMilestoneLabel(m);
+            const isM = isMilestoneLoop(m);
+            const hideBar = (sliderHandleEnd === "end9" && m === maxLoops);
+            row.innerHTML = `
+              <div class="h-milestone-label" title="${curL.rulerTitle}">${label}</div>
+              <div class="h-track-bar${isM ? " is-milestone" : ""}" style="${hideBar ? "visibility: hidden; pointer-events: none;" : ""}">
+                <div class="h-track-fill"></div>
+                <div class="h-thumb"></div>
+              </div>
+            `;
+
+            const labelEl = row.querySelector(".h-milestone-label");
+            labelEl.addEventListener("pointerdown", ev => {
+              ev.stopPropagation();
+              angle = clampAngle(m * 360);
+              updateAll();
+            });
+
+            tracksWrap.appendChild(row);
+          });
+
+          sliderContainer.appendChild(tracksWrap);
+          updateHorizontalSliderTracks();
+
+          function setHorizontal(e) {
+            const rect = sliderContainer.getBoundingClientRect();
+            const totalRows = allLoops.length;
+            const rowIdx = Math.max(0, Math.min(totalRows - 1, Math.floor((e.clientY - rect.top) / (rect.height / totalRows))));
+            const loopVal = allLoops[rowIdx];
+
+            if (sliderHandleEnd === "end9" && loopVal === maxLoops) {
+              angle = clampAngle(maxLoops * 360);
+              updateAll();
+              return;
+            }
+
+            const rowEl = tracksWrap.children[rowIdx];
+            const barEl = rowEl.querySelector(".h-track-bar");
+            const barRect = barEl.getBoundingClientRect();
+
+            const f = Math.max(0, Math.min(1, (e.clientX - barRect.left) / barRect.width));
+            const rawAngle = loopVal * 360 + f * 360;
+            angle = clampAngle(snapEnabled ? snapAngle(rawAngle) : Math.round(rawAngle));
+            updateAll();
+          }
+
+          sliderContainer.onpointerdown = e => {
+            isPlaying = false;
+            document.getElementById("btnPlay").textContent = (i18n[currentLang] || i18n.en).play;
+
+            sliderContainer.setPointerCapture(e.pointerId);
+            setHorizontal(e);
+            sliderContainer.onpointermove = setHorizontal;
+            sliderContainer.onpointerup = () => { sliderContainer.onpointermove = null; };
+          };
+        } else {
+          // Mode 1-V: Landscape Vertical Milestone Tracks (||||||||)
+          const tracksWrap = document.createElement("div");
+          tracksWrap.className = "tracks-vertical";
+
+          allLoops.forEach(m => {
+            const col = document.createElement("div");
+            col.className = "v-track-col";
+            col.dataset.loop = m;
+
+            const label = getMilestoneLabel(m);
+            const isM = isMilestoneLoop(m);
+            const hideBar = (sliderHandleEnd === "end9" && m === maxLoops);
+            col.innerHTML = `
+              <div class="v-milestone-label" title="${curL.rulerTitle}">${label}</div>
+              <div class="v-track-bar${isM ? " is-milestone" : ""}" style="${hideBar ? "visibility: hidden; pointer-events: none;" : ""}">
+                <div class="v-track-fill"></div>
+                <div class="v-thumb"></div>
+              </div>
+            `;
+
+            const labelEl = col.querySelector(".v-milestone-label");
+            labelEl.addEventListener("pointerdown", ev => {
+              ev.stopPropagation();
+              angle = clampAngle(m * 360);
+              updateAll();
+            });
+
+            tracksWrap.appendChild(col);
+          });
+
+          sliderContainer.appendChild(tracksWrap);
+          updateVerticalSliderTracks();
+
+          function setVertical(e) {
+            const rect = sliderContainer.getBoundingClientRect();
+            const totalCols = allLoops.length;
+            const colIdx = Math.max(0, Math.min(totalCols - 1, Math.floor((e.clientX - rect.left) / (rect.width / totalCols))));
+            const loopVal = allLoops[colIdx];
+
+            if (sliderHandleEnd === "end9" && loopVal === maxLoops) {
+              angle = clampAngle(maxLoops * 360);
+              updateAll();
+              return;
+            }
+
+            const colEl = tracksWrap.children[colIdx];
+            const barEl = colEl.querySelector(".v-track-bar");
+            const barRect = barEl.getBoundingClientRect();
+
+            const f = Math.max(0, Math.min(1, 1 - (e.clientY - barRect.top) / barRect.height));
+            const rawAngle = loopVal * 360 + f * 360;
+            angle = clampAngle(snapEnabled ? snapAngle(rawAngle) : Math.round(rawAngle));
+            updateAll();
+          }
+
+          sliderContainer.onpointerdown = e => {
+            isPlaying = false;
+            document.getElementById("btnPlay").textContent = (i18n[currentLang] || i18n.en).play;
+
+            sliderContainer.setPointerCapture(e.pointerId);
+            setVertical(e);
+            sliderContainer.onpointermove = setVertical;
+            sliderContainer.onpointerup = () => { sliderContainer.onpointermove = null; };
+          };
+        }
+      }
+    }
+
+    function updateVerticalSliderTracks() {
+      if (isSimpleMode || sliderLayout !== "stacked360") return;
+      let currentLoop = Math.floor(angle / 360);
+      let fracInLoop = Math.max(0, Math.min(1, (angle - currentLoop * 360) / 360));
+
+      if (sliderHandleEnd === "end9" && angle >= maxLoops * 360) {
+        currentLoop = maxLoops - 1;
+        fracInLoop = 1.0;
+      }
+
+      const cols = sliderContainer.querySelectorAll(".v-track-col");
+      cols.forEach(col => {
+        const loopVal = parseInt(col.dataset.loop, 10);
+        const fill = col.querySelector(".v-track-fill");
+        const thumb = col.querySelector(".v-thumb");
+        if (!fill || !thumb) return;
+
+        if (loopVal === currentLoop) {
+          fill.style.height = (fracInLoop * 100) + "%";
+          fill.style.background = (angle >= 0) ? "var(--blue)" : "var(--needle-col)";
+          thumb.style.display = "block";
+          thumb.style.bottom = (fracInLoop * 100) + "%";
+        } else if (angle >= 0 && loopVal >= 0 && loopVal < currentLoop) {
+          fill.style.height = "100%";
+          fill.style.background = "var(--blue)";
+          thumb.style.display = "none";
+        } else if (angle < 0 && loopVal < 0 && loopVal > currentLoop) {
+          fill.style.height = "100%";
+          fill.style.background = "var(--needle-col)";
+          thumb.style.display = "none";
+        } else {
+          fill.style.height = "0%";
+          thumb.style.display = "none";
+        }
+      });
+    }
+
+    function updateHorizontalSliderTracks() {
+      if (isSimpleMode || sliderLayout !== "stacked360") return;
+      let currentLoop = Math.floor(angle / 360);
+      let fracInLoop = Math.max(0, Math.min(1, (angle - currentLoop * 360) / 360));
+
+      if (sliderHandleEnd === "end9" && angle >= maxLoops * 360) {
+        currentLoop = maxLoops - 1;
+        fracInLoop = 1.0;
+      }
+
+      const rows = sliderContainer.querySelectorAll(".h-track-row");
+      rows.forEach(row => {
+        const loopVal = parseInt(row.dataset.loop, 10);
+        const fill = row.querySelector(".h-track-fill");
+        const thumb = row.querySelector(".h-thumb");
+        if (!fill || !thumb) return;
+
+        if (loopVal === currentLoop) {
+          fill.style.width = (fracInLoop * 100) + "%";
+          fill.style.background = (angle >= 0) ? "var(--blue)" : "var(--needle-col)";
+          thumb.style.display = "block";
+          thumb.style.left = (fracInLoop * 100) + "%";
+        } else if (angle >= 0 && loopVal >= 0 && loopVal < currentLoop) {
+          fill.style.width = "100%";
+          fill.style.background = "var(--blue)";
+          thumb.style.display = "none";
+        } else if (angle < 0 && loopVal < 0 && loopVal > currentLoop) {
+          fill.style.width = "100%";
+          fill.style.background = "var(--needle-col)";
+          thumb.style.display = "none";
+        } else {
+          fill.style.width = "0%";
+          thumb.style.display = "none";
+        }
+      });
+    }
+
+    function update180Slider() {
+      if (isSimpleMode || sliderLayout !== "stacked180") return;
+      const degInLoop = nrm(angle);
+      const isUpper = degInLoop < 180;
+      const fillU = document.getElementById("fill180Upper");
+      const thumbU = document.getElementById("thumb180Upper");
+      const fillL = document.getElementById("fill180Lower");
+      const thumbL = document.getElementById("thumb180Lower");
+
+      if (!fillU || !fillL) return;
+
+      if (isUpper) {
+        const p = degInLoop / 180;
+        fillU.style.height = (p * 100) + "%";
+        thumbU.style.display = "block";
+        thumbU.style.bottom = (p * 100) + "%";
+
+        fillL.style.height = "0%";
+        thumbL.style.display = "none";
+      } else {
+        const p = (degInLoop - 180) / 180;
+        fillU.style.height = "100%";
+        thumbU.style.display = "none";
+
+        fillL.style.height = (p * 100) + "%";
+        thumbL.style.display = "block";
+        thumbL.style.bottom = (p * 100) + "%";
+      }
+    }
+
+    function updateContinuousSlider() {
+      if (isSimpleMode || sliderLayout !== "continuous") return;
+      const maxVal = maxLoops * 360;
+      const pct = Math.max(0, Math.min(1, (angle + maxVal) / (2 * maxVal)));
+      const fill = document.getElementById("singleContFill");
+      const thumb = document.getElementById("singleContThumb");
+      if (fill && thumb) {
+        fill.style.height = (pct * 100) + "%";
+        thumb.style.bottom = (pct * 100) + "%";
+      }
+    }
+
+    function renderCoilCurve() {
+      const wrap = document.createElement("div");
+      wrap.className = "coil-curve-wrap";
+      const curL = i18n[currentLang] || i18n.en;
+      wrap.innerHTML = `
+        <div class="coil-curve-header">
+          <div class="coil-curve-stat">
+            <span class="coil-curve-badge" id="coilLoopStat">[Y: Loops ±10]</span>
+            <span class="coil-comp-badge" id="coilScaleStat">[Comp: 1x]</span>
+          </div>
+          <input type="text" id="coilCurrentValBox" class="coil-read-val" readonly value="30.0°" title="Current Value">
+        </div>
+        <div class="coil-curve-canvas-wrap" id="coilCanvasWrap">
+          <svg class="coil-curve-svg" id="coilSvg" viewBox="0 0 240 220" preserveAspectRatio="none">
+            <g id="coilGridLayer"></g>
+            <path id="coilPathBg" fill="none" stroke="var(--ring)" stroke-width="1" opacity="0.3"></path>
+            <path id="coilPathActive" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"></path>
+            <g id="coilCursorLayer"></g>
+          </svg>
+        </div>
+        <div class="coil-curve-note" id="coilCurveNote">${curL.curveNote || "(Note: Area kurva READ-ONLY, interaksi via diagram)"}</div>
+      `;
+      sliderContainer.appendChild(wrap);
+    }
+
+    function updateCoilCurve() {
+      if (activeMode !== "infinite" && (isSimpleMode || sliderLayout !== "coilCurve")) return;
+      const valBox = document.getElementById("coilCurrentValBox");
+      const loopStat = document.getElementById("coilLoopStat");
+      const scaleStat = document.getElementById("coilScaleStat");
+      const gridLayer = document.getElementById("coilGridLayer");
+      const pathBg = document.getElementById("coilPathBg");
+      const pathActive = document.getElementById("coilPathActive");
+      const cursorLayer = document.getElementById("coilCursorLayer");
+      if (!valBox || !gridLayer || !pathBg || !pathActive || !cursorLayer) return;
+
+      valBox.value = formatDegree(angle);
+
+      const turns = Math.abs(angle) / 360;
+      const currentLoop = Math.floor(angle / 360);
+      const isFwd = angle >= 0;
+
+      loopStat.textContent = currentLoop >= 0
+        ? `[Y: +${currentLoop + 1}L]`
+        : `[Y: ${currentLoop}L]`;
+      loopStat.style.color = isFwd ? "var(--blue)" : "var(--needle-col)";
+      loopStat.style.borderColor = isFwd ? "rgba(59, 130, 246, 0.4)" : "rgba(239, 68, 68, 0.4)";
+      loopStat.style.background = isFwd ? "rgba(59, 130, 246, 0.12)" : "rgba(239, 68, 68, 0.12)";
+
+      // Exact physical pixel measurement of the diagram's biggest ring loop (r = 110, diameter = 220)
+      const ringEl = document.getElementById("biggestRingGuide") || document.getElementById("biggestRingLoop");
+      let ringHeight = 180;
+      let ringCenterY = null;
+      if (ringEl) {
+        const rRect = ringEl.getBoundingClientRect();
+        if (rRect.height > 20) {
+          ringHeight = rRect.height;
+          ringCenterY = rRect.top + rRect.height / 2;
+        }
+      }
+
+      // If measuring is temporarily unavailable, fall back to SVG scale
+      if (!ringCenterY && svg) {
+        const sRect = svg.getBoundingClientRect();
+        const scale = Math.min(sRect.width, sRect.height) / 560;
+        ringHeight = 220 * scale;
+        ringCenterY = sRect.top + sRect.height / 2;
+      }
+
+      const curveH = Math.max(60, Math.round(ringHeight));
+      const amp = curveH / 2;
+      const padY = 14;
+      const midY = amp + padY;
+      const totalSvgH = Math.round(curveH + padY * 2);
+
+      const canvasWrap = document.getElementById("coilCanvasWrap");
+      if (canvasWrap) {
+        canvasWrap.style.height = `${totalSvgH}px`;
+        canvasWrap.style.flex = "none";
+      }
+
+      const coilSvg = document.getElementById("coilSvg");
+      if (coilSvg) {
+        coilSvg.setAttribute("viewBox", `0 0 240 ${totalSvgH}`);
+        coilSvg.setAttribute("preserveAspectRatio", "none");
+      }
+
+      // Vertically align 0L axis with diagram circle center (cy)
+      const wrap = document.querySelector(".coil-curve-wrap");
+      if (wrap && ringCenterY && sliderContainer) {
+        const contRect = sliderContainer.getBoundingClientRect();
+        const headerEl = wrap.querySelector(".coil-curve-header");
+        const headerH = headerEl ? headerEl.offsetHeight : 24;
+        const targetCanvasTop = ringCenterY - midY;
+        const targetWrapTop = (targetCanvasTop - contRect.top) - (headerH + 6);
+        const maxWrapTop = Math.max(0, contRect.height - (totalSvgH + headerH + 30));
+        const safeWrapTop = Math.max(0, Math.min(maxWrapTop, targetWrapTop));
+        wrap.style.marginTop = `${Math.round(safeWrapTop)}px`;
+      }
+
+      // Scaling calculation: base is 1/10 width of plot area per curve.
+      // If > 10 loops, compress width /4 /4 /4 infinite:
+      const W = 240;
+      const x0 = 34;
+      const x1 = 236;
+      const plotW = x1 - x0;
+      const baseWaveW = plotW / 10; // 1/10 W per full 360 cycle
+
+      let compression = 1;
+      if (turns > 10) {
+        const tiers = Math.floor(Math.log(turns / 10) / Math.log(4)) + 1;
+        compression = Math.pow(4, tiers);
+      }
+      scaleStat.textContent = compression === 1 ? "[Comp: 1x]" : "[Comp: /" + compression + "]";
+
+      const waveW = Math.max(0.1, baseWaveW / compression);
+      const totalProgW = Math.min(plotW, turns * waveW);
+      const activeColor = isFwd ? "var(--blue)" : "var(--needle-col)";
+
+      // Draw Grid lines & Y-Axis with ticks (+10L ┬, 0L ┼, -10L ┴)
+      if (isFwd) {
+        gridLayer.innerHTML = `
+          <line x1="${x0}" y1="${midY - amp}" x2="${x0}" y2="${midY + amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.6"/>
+          <line x1="${x0 - 4}" y1="${midY - amp}" x2="${x0 + 3}" y2="${midY - amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <line x1="${x0 - 4}" y1="${midY}" x2="${x0 + 3}" y2="${midY}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <line x1="${x0 - 4}" y1="${midY + amp}" x2="${x0 + 3}" y2="${midY + amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <text x="${x0 - 6}" y="${midY - amp + 3.5}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">+10L</text>
+          <text x="${x0 - 6}" y="${midY + 3}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">0L</text>
+          <text x="${x0 - 6}" y="${midY + amp + 3}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">-10L</text>
+          <line x1="${x0}" y1="${midY}" x2="${x1}" y2="${midY}" stroke="var(--ring)" stroke-width="0.9" stroke-dasharray="3 3" opacity="0.7"/>
+          <line x1="${x0}" y1="${midY - amp}" x2="${x1}" y2="${midY - amp}" stroke="var(--ring)" stroke-width="0.7" opacity="0.2"/>
+          <line x1="${x0}" y1="${midY + amp}" x2="${x1}" y2="${midY + amp}" stroke="var(--ring)" stroke-width="0.7" opacity="0.2"/>
+          <text x="${x1}" y="${midY - amp + 9}" fill="var(--mute)" font-size="7.5" font-style="italic" text-anchor="end" opacity="0.6">Base: 1/10 W (→)</text>
+        `;
+      } else {
+        gridLayer.innerHTML = `
+          <line x1="${x1}" y1="${midY - amp}" x2="${x1}" y2="${midY + amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.6"/>
+          <line x1="${x1 - 3}" y1="${midY - amp}" x2="${x1 + 4}" y2="${midY - amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <line x1="${x1 - 3}" y1="${midY}" x2="${x1 + 4}" y2="${midY}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <line x1="${x1 - 3}" y1="${midY + amp}" x2="${x1 + 4}" y2="${midY + amp}" stroke="var(--ink)" stroke-width="1.2" opacity="0.7"/>
+          <line x1="${x0}" y1="${midY - amp}" x2="${x0}" y2="${midY + amp}" stroke="var(--ring)" stroke-width="1" opacity="0.4"/>
+          <text x="${x0 - 6}" y="${midY - amp + 3.5}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">+10L</text>
+          <text x="${x0 - 6}" y="${midY + 3}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">0L</text>
+          <text x="${x0 - 6}" y="${midY + amp + 3}" fill="var(--mute)" font-size="8.5" font-weight="700" text-anchor="end" font-family="-apple-system, sans-serif">-10L</text>
+          <line x1="${x0}" y1="${midY}" x2="${x1}" y2="${midY}" stroke="var(--ring)" stroke-width="0.9" stroke-dasharray="3 3" opacity="0.7"/>
+          <line x1="${x0}" y1="${midY - amp}" x2="${x1}" y2="${midY - amp}" stroke="var(--ring)" stroke-width="0.7" opacity="0.2"/>
+          <line x1="${x0}" y1="${midY + amp}" x2="${x1}" y2="${midY + amp}" stroke="var(--ring)" stroke-width="0.7" opacity="0.2"/>
+          <text x="${x0}" y="${midY - amp + 9}" fill="var(--needle-col)" font-size="7.5" font-style="italic" text-anchor="start" opacity="0.85">(←) Minus: Kanan ke Kiri</text>
+        `;
+      }
+
+      // Cycle-periodic sine wave generator that guarantees every single wave cycle
+      // reaches exact +10L peak (midY - amp) and -10L trough (midY + amp) at any compression tier (1x, /4, /16, /64)
+      function buildSinePath(startX, dir, distance, waveW, midY, amp) {
+        if (distance <= 0) return "";
+        let d = `M${startX.toFixed(1)},${midY.toFixed(1)}`;
+        const numCycles = distance / waveW;
+        const fullCycles = Math.floor(numCycles);
+        const remCycle = numCycles - fullCycles;
+
+        // When wave is wide (>= 8px), sample 16 points for buttery smooth curve.
+        // When compressed (< 8px, e.g. /4, /16, /64), sample 4 key phase points per cycle:
+        // (0, +amp peak, 0, -amp trough) so every single wave peak ALWAYS hits exactly +10L and -10L!
+        const ptsPerCycle = waveW >= 8 ? 16 : 4;
+
+        for (let k = 0; k < fullCycles; k++) {
+          const cycleX = startX + dir * (k * waveW);
+          for (let p = 1; p <= ptsPerCycle; p++) {
+            const frac = p / ptsPerCycle;
+            const px = cycleX + dir * (frac * waveW);
+            const py = midY - amp * Math.sin(frac * 2 * Math.PI);
+            d += ` L${px.toFixed(1)},${py.toFixed(1)}`;
+          }
+        }
+
+        if (remCycle > 0.001) {
+          const cycleX = startX + dir * (fullCycles * waveW);
+          const remPts = Math.max(1, Math.round(remCycle * ptsPerCycle));
+          for (let p = 1; p <= remPts; p++) {
+            const frac = (p / remPts) * remCycle;
+            const px = cycleX + dir * (frac * waveW);
+            const py = midY - amp * Math.sin(frac * 2 * Math.PI);
+            d += ` L${px.toFixed(1)},${py.toFixed(1)}`;
+          }
+        }
+        return d;
+      }
+
+      let curX, curY;
+
+      if (isFwd) {
+        // PLUS DEGREE: DARI KIRI KE KANAN (From Left to Right)
+        const dFull = buildSinePath(x0, 1, plotW, waveW, midY, amp);
+        pathBg.setAttribute("d", dFull);
+
+        const dActive = buildSinePath(x0, 1, totalProgW, waveW, midY, amp);
+        pathActive.setAttribute("d", dActive);
+
+        curX = x0 + totalProgW;
+        curY = midY - amp * Math.sin(turns * 2 * Math.PI);
+      } else {
+        // MINUS DEGREE: DARI KANAN KE KIRI (From Right to Left)
+        const dFull = buildSinePath(x1, -1, plotW, waveW, midY, amp);
+        pathBg.setAttribute("d", dFull);
+
+        const dActive = buildSinePath(x1, -1, totalProgW, waveW, midY, amp);
+        pathActive.setAttribute("d", dActive);
+
+        curX = x1 - totalProgW;
+        curY = midY - amp * Math.sin(turns * 2 * Math.PI);
+      }
+
+      pathActive.setAttribute("stroke", activeColor);
+
+      // Current cursor / tracer marker on the curve
+      cursorLayer.innerHTML = `
+        <line x1="${curX.toFixed(1)}" y1="${midY - amp}" x2="${curX.toFixed(1)}" y2="${midY + amp}" stroke="${activeColor}" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.75"/>
+        <circle cx="${curX.toFixed(1)}" cy="${curY.toFixed(1)}" r="6" fill="${activeColor}" opacity="0.3"/>
+        <circle cx="${curX.toFixed(1)}" cy="${curY.toFixed(1)}" r="3.5" fill="${activeColor}" stroke="#fff" stroke-width="1.6"/>
+      `;
+    }
+
+    function checkCrashCaution() {
+      if (Math.abs(angle) >= 100 * 360) {
+        if (!crashCautionShown) {
+          crashCautionShown = true;
+          isPlaying = false;
+          syncPlayButtons();
+          const modal = document.getElementById("crashCautionModal");
+          if (modal) modal.classList.add("open");
+        }
+      } else {
+        crashCautionShown = false;
+      }
+    }
+
+    function updateLegend() {
+      const curL = i18n[currentLang] || i18n.en;
+      const guideRow = document.getElementById("legendGuideRow");
+      const guideIcon = document.getElementById("legGuideIcon");
+      const guideText = document.getElementById("legGuideText");
+      const legCosD = document.getElementById("legCosDesc");
+      const legSinD = document.getElementById("legSinDesc");
+      const legTanD = document.getElementById("legTanDesc");
+      const legNeedleD = document.getElementById("legNeedleDesc");
+
+      if (legCosD) legCosD.textContent = curL.legCosDesc;
+      if (legSinD) legSinD.textContent = curL.legSinDesc;
+      if (legTanD) legTanD.textContent = curL.legTanDesc;
+      if (legNeedleD) legNeedleD.textContent = curL.legNeedleDesc;
+
+      if (!guideRow || !guideIcon || !guideText) return;
+
+      const isPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+
+      if (activeMode === "simple") {
+        if (isPortrait) {
+          guideIcon.textContent = "↔";
+          guideText.textContent = curL.legHSlider;
+        } else {
+          guideIcon.textContent = "↕";
+          guideText.textContent = curL.legVSlider;
+        }
+      } else if (activeMode === "coil") {
+        guideIcon.textContent = "↕";
+        guideText.textContent = curL.legCoilRuler;
+      } else if (activeMode === "infinite") {
+        guideIcon.textContent = "〰";
+        guideText.textContent = curL.legInfCurve;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // UNIFIED UPDATE & ANIMATION LOOP
+    // -------------------------------------------------------------
+    function updateAll() {
+      drawDiagram();
+      updateDataCards();
+      updateLegend();
+      if (activeMode === "infinite" || sliderLayout === "coilCurve") {
+        updateCoilCurve();
+      } else if (activeMode === "simple" || isSimpleMode) {
+        const normAngle = ((Math.round(angle) % 360) + 360) % 360;
+        const pct = Math.max(0, Math.min(1, normAngle / 360));
+
+        const txtRad = document.getElementById("simpleRadText");
+        if (typeof txtAngle !== "undefined" && txtAngle) txtAngle.textContent = formatDegree(normAngle);
+        if (txtRad) txtRad.textContent = radFormatted(normAngle, false);
+
+        const fillH = document.getElementById("simpleFillH");
+        const thumbH = document.getElementById("simpleThumbH");
+        if (fillH && thumbH) {
+          fillH.style.width = (pct * 100) + "%";
+          thumbH.style.left = (pct * 100) + "%";
+        }
+
+        const fillV = document.getElementById("simpleFillV");
+        const thumbV = document.getElementById("simpleThumbV");
+        if (fillV && thumbV) {
+          fillV.style.height = (pct * 100) + "%";
+          thumbV.style.bottom = (pct * 100) + "%";
+        }
+      } else if (sliderLayout === "stacked180") {
+        update180Slider();
+      } else if (sliderLayout === "continuous") {
+        updateContinuousSlider();
+      } else {
+        updateVerticalSliderTracks();
+        updateHorizontalSliderTracks();
+      }
+      checkCrashCaution();
+    }
+
+    function animLoop(t) {
+      if (!lastAnimTime) lastAnimTime = t;
+      const dt = (t - lastAnimTime) / 1000;
+      lastAnimTime = t;
+
+      if (isPlaying) {
+        const dirSign = playDirection === "backward" ? -1 : 1;
+        angle += dirSign * 45 * dt;
+
+        if (activeMode === "infinite") {
+          checkCrashCaution();
+        } else {
+          const cap = (activeMode === "simple" || isSimpleMode) ? 360 : maxLoops * 360;
+          if (dirSign > 0) {
+            if (angle > cap) {
+              angle = (activeMode === "simple" || isSimpleMode) ? 0 : -cap;
+            }
+          } else {
+            if (angle < ((activeMode === "simple" || isSimpleMode) ? 0 : -cap)) {
+              angle = (activeMode === "simple" || isSimpleMode) ? 360 : cap;
+            }
+          }
+        }
+        updateAll();
+        if (isPlaying) {
+          requestAnimationFrame(animLoop);
+        }
+      }
+    }
+
+    // -------------------------------------------------------------
+    // CIRCLE DRAGGING INTERACTION (SMOOTH WINDING)
+    // -------------------------------------------------------------
+    let prevDragDeg = null;
+
+    function handleCircleMove(e) {
+      if (!svg) return;
+      let qx, qy;
+      try {
+        const ctm = svg.getScreenCTM();
+        if (ctm) {
+          const p = svg.createSVGPoint();
+          p.x = e.clientX;
+          p.y = e.clientY;
+          const q = p.matrixTransform(ctm.inverse());
+          qx = q.x;
+          qy = q.y;
+        } else {
+          const rect = svg.getBoundingClientRect();
+          qx = (e.clientX - rect.left) * (560 / rect.width);
+          qy = (e.clientY - rect.top) * (560 / rect.height);
+        }
+      } catch (_) {
+        const rect = svg.getBoundingClientRect();
+        qx = (e.clientX - rect.left) * (560 / rect.width);
+        qy = (e.clientY - rect.top) * (560 / rect.height);
+      }
+
+      let deg = Math.atan2(cy - qy, qx - cx) * 180 / Math.PI;
+      if (deg < 0) deg += 360;
+
+      if (snapEnabled && typeof S !== "undefined") {
+        const nearest = S.concat(360).reduce((best, s) => Math.abs(s - deg) < Math.abs(best - deg) ? s : best);
+        if (Math.abs(nearest - deg) < 4.2) deg = nearest % 360;
+      } else {
+        deg = Math.round(deg * 10) / 10;
+      }
+
+      if (activeMode === "simple" || isSimpleMode) {
+        angle = clampAngle(deg);
+      } else {
+        if (prevDragDeg !== null) {
+          let delta = deg - prevDragDeg;
+          if (delta > 180) delta -= 360;
+          else if (delta < -180) delta += 360;
+          angle = clampAngle(angle + delta);
+        }
+        prevDragDeg = deg;
+      }
+      updateAll();
+    }
+
+    svg.addEventListener("pointerdown", e => {
+      isPlaying = false;
+      syncPlayButtons();
+      isCircleDragging = true;
+      prevDragDeg = null;
+      try { svg.setPointerCapture(e.pointerId); } catch (_) { }
+      handleCircleMove(e);
+    });
+
+    svg.addEventListener("pointermove", e => {
+      if (isCircleDragging) handleCircleMove(e);
+    });
+
+    svg.addEventListener("pointerup", e => {
+      isCircleDragging = false;
+      prevDragDeg = null;
+      try { svg.releasePointerCapture(e.pointerId); } catch (_) { }
+    });
+
+    svg.addEventListener("pointercancel", () => {
+      isCircleDragging = false;
+      prevDragDeg = null;
+    });
+
+    // -------------------------------------------------------------
+    // HEADER & CONTROLS BINDINGS (3 MODES)
+    // -------------------------------------------------------------
+    const btnSimple = document.getElementById("btnModeSimple");
+    const btnCoil = document.getElementById("btnModeCoil");
+    const btnInfinite = document.getElementById("btnModeInfinite");
+
+    function setMode(mode) {
+      activeMode = mode;
+      isSimpleMode = (mode === "simple");
+      if (btnSimple) btnSimple.classList.toggle("active", mode === "simple");
+      if (btnCoil) btnCoil.classList.toggle("active", mode === "coil");
+      if (btnInfinite) btnInfinite.classList.toggle("active", mode === "infinite");
+      const appEl = document.getElementById("app");
+      if (appEl) appEl.classList.toggle("mode-infinite", mode === "infinite");
+      angle = clampAngle(angle);
+      renderSlider();
+      updateAll();
+    }
+
+    if (btnSimple) btnSimple.onclick = () => setMode("simple");
+    if (btnCoil) btnCoil.onclick = () => setMode("coil");
+    if (btnInfinite) btnInfinite.onclick = () => setMode("infinite");
+
+    const btnLengths = document.getElementById("btnLengths");
+    btnLengths.onclick = () => {
+      showLengths = !showLengths;
+      btnLengths.classList.toggle("active", showLengths);
+      const curL = i18n[currentLang] || i18n.en;
+      const span = btnLengths.querySelector("span") || btnLengths;
+      span.textContent = curL.lengthBtn(circleRadius);
+      updateAll();
+    };
+
+    const btnPlay = document.getElementById("btnPlay");
+    btnPlay.onclick = () => {
+      isPlaying = !isPlaying;
+      syncPlayButtons();
+      if (isPlaying) {
+        lastAnimTime = performance.now();
+        requestAnimationFrame(animLoop);
+      }
+    };
+
+    document.getElementById("btnMinus360").onclick = () => {
+      angle = clampAngle(angle - 360);
+      updateAll();
+    };
+
+    document.getElementById("btnPlus360").onclick = () => {
+      angle = clampAngle(angle + 360);
+      updateAll();
+    };
+
+    const btnSnap = document.getElementById("btnSnap");
+    btnSnap.onclick = () => {
+      snapEnabled = !snapEnabled;
+      syncSnapButtons();
+    };
+
+    // Legend Toggle below slider (75% / 25% split)
+    const btnToggleLegend = document.getElementById("btnToggleLegend");
+    let legendShown = true;
+    btnToggleLegend.onclick = () => {
+      legendShown = !legendShown;
+      panelSlider.classList.toggle("show-legend", legendShown);
+      btnToggleLegend.classList.toggle("on", legendShown);
+      const curL = i18n[currentLang] || i18n.en;
+      btnToggleLegend.textContent = legendShown ? curL.legendOn : curL.legendOff;
+    };
+
+    // Quick Language Toggle in Controls Toolbar (ID / EN)
+    const btnLang = document.getElementById("btnLang");
+    if (btnLang) {
+      btnLang.onclick = () => {
+        // Toggle language
+        currentLang = currentLang === "id" ? "en" : "id";
+        userLangPref = currentLang;
+        localStorage.setItem("ksi_lang_pref", userLangPref);
+        const selLang = document.getElementById("setLang");
+        if (selLang) selLang.value = userLangPref;
+        applyLanguage();
+        renderSlider();
+        updateAll();
+      };
+    }
+
+    // Fullscreen Toggle in Diagram Header Toolbar
+    const btnFullscreen = document.getElementById("btnFullscreen");
+    const iconFullscreen = document.getElementById("iconFullscreen");
+    const btnExitFullscreen = document.getElementById("btnExitFullscreen");
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => { });
+      } else {
+        document.exitFullscreen().catch(() => { });
+      }
+    }
+
+    btnFullscreen.onclick = toggleFullscreen;
+    btnExitFullscreen.onclick = toggleFullscreen;
+
+    document.addEventListener("fullscreenchange", () => {
+      const isFull = !!document.fullscreenElement;
+      btnFullscreen.classList.toggle("active", isFull);
+      if (iconFullscreen) iconFullscreen.textContent = isFull ? "✕" : "⛶";
+    });
+
+    // -------------------------------------------------------------
+    // TOP-RIGHT CORNER COLLAPSE & EXPAND FOR DATA & SLIDER PANELS
+    // -------------------------------------------------------------
+    const appContainer = document.querySelector(".app");
+    const panelData = document.getElementById("panelData");
+    const panelSlider = document.getElementById("panelSlider");
+    const btnToggleData = document.getElementById("btnToggleData");
+    const btnToggleSlider = document.getElementById("btnToggleSlider");
+    const iconToggleData = document.getElementById("iconToggleData");
+    const iconToggleSlider = document.getElementById("iconToggleSlider");
+    const labelExpandData = document.getElementById("labelExpandData");
+    const labelExpandSlider = document.getElementById("labelExpandSlider");
+
+    function updateToggleIcons() {
+      const isPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+      if (isPortrait) {
+        iconToggleData.textContent = dataCollapsed ? "▼" : "▲";
+        iconToggleSlider.textContent = sliderCollapsed ? "▲" : "▼";
+      } else {
+        iconToggleData.textContent = dataCollapsed ? "▶" : "◀";
+        iconToggleSlider.textContent = sliderCollapsed ? "◀" : "▶";
+      }
+    }
+
+    const btnToggleHud = document.getElementById("btnToggleHud");
+    let cornerHudEnabled = true;
+
+    function updateCornerHudVisibility() {
+      const overlay = document.getElementById("diagramHudOverlay");
+      if (!overlay) return;
+      const shouldShow = dataCollapsed && cornerHudEnabled && textConfig.cornerHud.show;
+      overlay.style.display = shouldShow ? "block" : "none";
+      overlay.setAttribute("data-size", textConfig.cornerHud.size || "medium");
+    }
+
+    if (btnToggleHud) {
+      btnToggleHud.onclick = (e) => {
+        e.stopPropagation();
+        cornerHudEnabled = !cornerHudEnabled;
+        btnToggleHud.classList.toggle("active", cornerHudEnabled);
+        btnToggleHud.title = `Corner HUD Values when collapsed: ${cornerHudEnabled ? "ON" : "OFF"}`;
+        updateCornerHudVisibility();
+      };
+    }
+
+    function toggleDataPanel() {
+      dataCollapsed = !dataCollapsed;
+      appContainer.classList.toggle("data-collapsed", dataCollapsed);
+      panelData.classList.toggle("is-collapsed", dataCollapsed);
+      updateToggleIcons();
+      updateCornerHudVisibility();
+    }
+
+    function toggleSliderPanel() {
+      sliderCollapsed = !sliderCollapsed;
+      appContainer.classList.toggle("slider-collapsed", sliderCollapsed);
+      panelSlider.classList.toggle("is-collapsed", sliderCollapsed);
+      updateToggleIcons();
+    }
+
+    // Collapsed Sidecontrol Action Strip Handlers (Consecutive: Play, Rotate CW Backward, Rotate CW Forward, Magnet)
+    const btnCollapsedPlay = document.getElementById("btnCollapsedPlay");
+    const btnCollapsedMinus = document.getElementById("btnCollapsedMinus");
+    const btnCollapsedPlus = document.getElementById("btnCollapsedPlus");
+    const btnCollapsedSnap = document.getElementById("btnCollapsedSnap");
+
+    if (btnCollapsedPlay) {
+      btnCollapsedPlay.onclick = (e) => {
+        e.stopPropagation();
+        isPlaying = !isPlaying;
+        syncPlayButtons();
+        if (isPlaying) {
+          lastAnimTime = performance.now();
+          requestAnimationFrame(animLoop);
+        }
+      };
+    }
+
+    if (btnCollapsedMinus) {
+      btnCollapsedMinus.onclick = (e) => {
+        e.stopPropagation();
+        angle = clampAngle(angle - 360);
+        updateAll();
+      };
+    }
+
+    if (btnCollapsedPlus) {
+      btnCollapsedPlus.onclick = (e) => {
+        e.stopPropagation();
+        angle = clampAngle(angle + 360);
+        updateAll();
+      };
+    }
+
+    if (btnCollapsedSnap) {
+      btnCollapsedSnap.onclick = (e) => {
+        e.stopPropagation();
+        snapEnabled = !snapEnabled;
+        syncSnapButtons();
+      };
+    }
+
+    btnToggleData.onclick = (e) => {
+      e.stopPropagation();
+      toggleDataPanel();
+    };
+    labelExpandData.onclick = (e) => {
+      e.stopPropagation();
+      toggleDataPanel();
+    };
+
+    btnToggleSlider.onclick = (e) => {
+      e.stopPropagation();
+      toggleSliderPanel();
+    };
+    labelExpandSlider.onclick = (e) => {
+      e.stopPropagation();
+      toggleSliderPanel();
+    };
+
+    // Toggle collapse/expand by clicking the sidepanel container itself
+    panelData.addEventListener("click", (e) => {
+      if (e.target.closest("button, input, select, a, .no-sweet-badge")) return;
+      if (dataCollapsed) {
+        toggleDataPanel();
+      } else if (e.target.closest(".panel-header")) {
+        toggleDataPanel();
+      }
+    });
+
+    panelSlider.addEventListener("click", (e) => {
+      if (e.target.closest("button, input, select, a, .slider-container, .legend-panel-box, .coil-curve-wrap")) return;
+      if (sliderCollapsed) {
+        toggleSliderPanel();
+      } else if (e.target.closest(".panel-header")) {
+        toggleSliderPanel();
+      }
+    });
+
+    let lastIsPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+    window.addEventListener("resize", () => {
+      const currentPortrait = window.matchMedia("(orientation: portrait), (max-aspect-ratio: 1/1)").matches;
+      if (currentPortrait !== lastIsPortrait) {
+        lastIsPortrait = currentPortrait;
+        renderSlider();
+      }
+      updateToggleIcons();
+    });
+    updateToggleIcons();
+
+    // Settings Modal
+    const settingsModal = document.getElementById("settingsModal");
+    document.getElementById("btnSettings").onclick = () => settingsModal.classList.add("open");
+    document.getElementById("btnCloseSettings").onclick = () => settingsModal.classList.remove("open");
+    document.getElementById("btnDoneSettings").onclick = () => settingsModal.classList.remove("open");
+
+    document.getElementById("setSliderLayout").onchange = e => {
+      sliderLayout = e.target.value;
+      renderSlider();
+      updateAll();
+    };
+
+    document.getElementById("setLoops").onchange = e => {
+      maxLoops = parseInt(e.target.value, 10);
+      angle = clampAngle(angle);
+      renderSlider();
+      updateAll();
+    };
+
+    const setSliderHandleEndEl = document.getElementById("setSliderHandleEnd");
+    if (setSliderHandleEndEl) {
+      setSliderHandleEndEl.value = sliderHandleEnd;
+      setSliderHandleEndEl.onchange = e => {
+        sliderHandleEnd = e.target.value;
+        localStorage.setItem("ksi_slider_handle_end", sliderHandleEnd);
+        renderSlider();
+        updateAll();
+      };
+    }
+
+    const setPlayDirectionEl = document.getElementById("setPlayDirection");
+    if (setPlayDirectionEl) {
+      setPlayDirectionEl.value = playDirection;
+      setPlayDirectionEl.onchange = e => {
+        playDirection = e.target.value;
+        localStorage.setItem("ksi_play_direction", playDirection);
+      };
+    }
+
+    document.getElementById("setRadius").onchange = e => {
+      circleRadius = Math.max(1, parseFloat(e.target.value) || 1);
+      const curL = i18n[currentLang] || i18n.en;
+      const span = btnLengths.querySelector("span") || btnLengths;
+      span.textContent = curL.lengthBtn(circleRadius);
+      drawBackground();
+      updateAll();
+    };
+
+    // Crash Caution Modal Button Handlers
+    const btnCrashReset = document.getElementById("btnCrashResetZero");
+    if (btnCrashReset) {
+      btnCrashReset.onclick = () => {
+        angle = 0;
+        crashCautionShown = false;
+        document.getElementById("crashCautionModal").classList.remove("open");
+        updateAll();
+      };
+    }
+
+    const btnCrashCont = document.getElementById("btnCrashContinue");
+    if (btnCrashCont) {
+      btnCrashCont.onclick = () => {
+        document.getElementById("crashCautionModal").classList.remove("open");
+      };
+    }
+
+    document.getElementById("setTheme").onchange = e => {
+      const t = e.target.value;
+      if (t === "system") {
+        root.removeAttribute("data-theme");
+      } else {
+        root.setAttribute("data-theme", t);
+      }
+    };
+
+    const setLangEl = document.getElementById("setLang");
+    if (setLangEl) {
+      setLangEl.value = userLangPref;
+      setLangEl.onchange = e => {
+        userLangPref = e.target.value;
+        localStorage.setItem("ksi_lang_pref", userLangPref);
+        currentLang = userLangPref === "auto" ? detectDeviceLanguage() : userLangPref;
+        applyLanguage();
+        renderSlider();
+        updateAll();
+      };
+    }
+
+    const setZeroDecimalEl = document.getElementById("setZeroDecimal");
+    if (setZeroDecimalEl) {
+      setZeroDecimalEl.value = showZeroDecimal ? "true" : "false";
+      setZeroDecimalEl.onchange = e => {
+        showZeroDecimal = e.target.value === "true";
+        localStorage.setItem("ksi_show_zero_decimal", showZeroDecimal);
+        drawDiagram();
+        updateDataCards();
+        if (typeof updateLoopModalUI === "function") updateLoopModalUI();
+      };
+    }
+
+    // Diagram Text & Labels Settings Logic
+    function renderTextSettingsTable() {
+      const tbody = document.getElementById("textCategoriesTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      for (const [key, item] of Object.entries(textConfig)) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${item.name}</strong></td>
+          <td style="text-align: center;">
+            <input type="checkbox" data-cat="${key}" ${item.show ? "checked" : ""} style="cursor: pointer; width: 15px; height: 15px;">
+          </td>
+          <td style="text-align: right;">
+            <select data-cat="${key}" style="font-size: 11px; padding: 2px 4px;">
+              <option value="small" ${item.size === "small" ? "selected" : ""}>Small</option>
+              <option value="medium" ${item.size === "medium" ? "selected" : ""}>Medium</option>
+              <option value="big" ${item.size === "big" ? "selected" : ""}>Big</option>
+            </select>
+          </td>
+        `;
+
+        const chk = tr.querySelector(`input[data-cat="${key}"]`);
+        chk.onchange = e => {
+          textConfig[key].show = e.target.checked;
+          checkShowAllStatus();
+          drawBackground();
+          drawDiagram();
+          updateCornerHudVisibility();
+        };
+
+        const sel = tr.querySelector(`select[data-cat="${key}"]`);
+        sel.onchange = e => {
+          textConfig[key].size = e.target.value;
+          drawBackground();
+          drawDiagram();
+          updateCornerHudVisibility();
+        };
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function checkShowAllStatus() {
+      const allOn = Object.values(textConfig).every(c => c.show);
+      const allOff = Object.values(textConfig).every(c => !c.show);
+      const chkAll = document.getElementById("setShowAllLabels");
+      const statusText = document.getElementById("showAllLabelsStatus");
+      if (chkAll) {
+        chkAll.checked = allOn;
+        chkAll.indeterminate = !allOn && !allOff;
+      }
+      if (statusText) {
+        statusText.textContent = allOn ? "All Visible" : allOff ? "All Hidden" : "Custom";
+      }
+    }
+
+    document.getElementById("setShowAllLabels").onchange = e => {
+      const state = e.target.checked;
+      for (const key in textConfig) {
+        textConfig[key].show = state;
+      }
+      renderTextSettingsTable();
+      checkShowAllStatus();
+      drawBackground();
+      drawDiagram();
+      updateCornerHudVisibility();
+    };
+
+    document.getElementById("setTextGlobalSize").onchange = e => {
+      const sz = e.target.value;
+      for (const key in textConfig) {
+        textConfig[key].size = sz;
+      }
+      renderTextSettingsTable();
+      drawBackground();
+      drawDiagram();
+      updateCornerHudVisibility();
+    };
+
+    let advancedTextOpen = false;
+    document.getElementById("btnToggleAdvancedText").onclick = () => {
+      advancedTextOpen = !advancedTextOpen;
+      document.getElementById("advancedTextTableWrap").style.display = advancedTextOpen ? "block" : "none";
+      document.getElementById("btnToggleAdvancedText").textContent = advancedTextOpen ? "Advanced ▴" : "Advanced ▾";
+    };
+
+    // Exact Info Modal
+    const exactModal = document.getElementById("exactModal");
+    document.getElementById("btnCloseExact").onclick = () => exactModal.classList.remove("open");
+    document.getElementById("btnGotItExact").onclick = () => exactModal.classList.remove("open");
+
+    [settingsModal, exactModal].forEach(m => {
+      if (m) m.onclick = e => { if (e.target === m) m.classList.remove("open"); };
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        if (settingsModal) settingsModal.classList.remove("open");
+        if (exactModal) exactModal.classList.remove("open");
+      }
+    });
+
+    // Initialize
+    applyLanguage();
+    renderSlider();
+    renderTextSettingsTable();
+    checkShowAllStatus();
+    updateAll();
+    updateCornerHudVisibility();
+  </script>
+
+  <!-- ==========================================================================
+       SLIDEV COMPONENT X-RAY & ARCHITECTURE MARKDOWN
+       Dual-Panel Playground reads this dynamically to render interactive slides
+       ========================================================================== -->
+  <script type="text/markdown" id="slidev-xray-markdown">
+---
+theme: default
+title: Unit Circle Resolver (Rad-Sin-Cos-Tan)
+info: |
+  ## Unit Circle Resolver (KSI)
+  Interactive Trigonometric Engine & Component Architecture X-Ray
+class: text-center
+highlighter: shiki
+transition: slide-left
+---
+
+# 📐 Unit Circle Resolver
+## Interactive Trigonometric Engine & Geometry X-Ray
+
+A zero-backend, single-file trigonometric visualizer packaged as a 3.5" Diskette Cartridge.
+
+---
+layout: two-cols
+---
+
+# 🎯 Mathematical Foundation
+
+The Unit Circle is a circle of unit radius centered at the Cartesian origin $(0, 0)$:
+
+$$x^2 + y^2 = 1$$
+
+For any central angle $\theta$:
+- **Cosine ($x$)**: $\cos(\theta) = x$
+- **Sine ($y$)**: $\sin(\theta) = y$
+- **Tangent**: $\tan(\theta) = \frac{y}{x}$
+
+::right::
+
+### Quadrant Sign Matrix
+- **Quadrant I**: All positive ($+, +, +$)
+- **Quadrant II**: Sine positive ($+, -, -$)
+- **Quadrant III**: Tangent positive ($-, -, +$)
+- **Quadrant IV**: Cosine positive ($-, +, -$)
+
+---
+layout: default
+---
+
+# 🔬 Component 1: SVG Wedge & Arc Engine
+
+Native SVG Arc Path commands (`M`, `L`, `A`) dynamically tracking angle $\theta$.
+
+```javascript
+const r = (ang * Math.PI) / 180;
+const x = cx + R * Math.cos(r);
+const y = cy - R * Math.sin(r);
+
+const wr = 44;
+wedge.setAttribute("d", 
+  `M${cx},${cy} L${cx + wr},${cy} A${wr},${wr} 0 ${ang > 180 ? 1 : 0} 0 ${cx + wr * Math.cos(r)},${cy - wr * Math.sin(r)}Z`
+);
+```
+
+---
+layout: default
+---
+
+# 🧮 Component 2: Exact Radical & Fraction Resolver
+
+Lookup matrix to render mathematical fractions ($\frac{\sqrt{2}}{2}, \frac{\sqrt{3}}{2}$) without precision jitter.
+
+```javascript
+const RADICAL_TABLE = {
+  0:   { sin: "0",    cos: "1",    tan: "0" },
+  30:  { sin: "1/2",  cos: "√3/2", tan: "√3/3" },
+  45:  { sin: "√2/2", cos: "√2/2", tan: "1" },
+  60:  { sin: "√3/2", cos: "1/2",  tan: "√3" },
+  90:  { sin: "1",    cos: "0",    tan: "undefined" }
+};
+```
+
+---
+layout: default
+---
+
+# ⚡ Component 3: Pointer Event Matrix & CTM Inversion
+
+Screen coordinate to SVG coordinate conversion via CTM inversion for zero-lag precision.
+
+```javascript
+function handlePointerMove(e) {
+  const point = svgElement.createSVGPoint();
+  point.x = e.clientX;
+  point.y = e.clientY;
+  const screenPoint = point.matrixTransform(svgElement.getScreenCTM().inverse());
+  const dx = screenPoint.x - cx;
+  const dy = cy - screenPoint.y;
+  let angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  if (angle < 0) angle += 360;
+  updateUnitCircleAngle(angle);
+}
+```
+
+---
+layout: end
+---
+
+# 🚀 100% Offline Airgap Ready
+Zero Server Dependencies • Single-File Portable Cartridge
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark" style="background-color: #161a14; color: #d8dec9;">
+<head>
+<meta charset="UTF-8">
+<script>
+(function () {
+try {
+var m = localStorage.getItem('arcade_theme_mode') || 'theme-dark';
+var a = localStorage.getItem('arcade_accent_color') || '#b0a84a';
+var doc = document.documentElement;
+doc.classList.remove('theme-dark', 'theme-light');
+doc.classList.add(m);
+doc.setAttribute('data-theme', m);
+doc.style.setProperty('--interactive-accent', a);
+if (m === 'theme-light') {
+doc.style.backgroundColor = '#f4f6f0';
+doc.style.color = '#191d17';
+} else {
+doc.style.backgroundColor = '#161a14';
+doc.style.color = '#d8dec9';
+}
+} catch (e) {}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Unit Circle Resolver -- Bento Playground | Fadhli S Lubis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+rel="stylesheet">
+<link rel="stylesheet" href="../../theme.css">
+<link rel="stylesheet" href="../../style.css">
+<style>
+/* ==========================================================================
+v01-03 BENTO SPLIT-SCREEN PLAYGROUND LAYOUT
+- >= 900px (incl. 900x900+): Desktop 60% Left / 40% Right Draggable Split
+- Zero Outer Horizontal & Vertical Page Scroll on Desktop (100dvh Lock)
+- Zero Horizontal Scroll on Mobile Portrait (< 900px, overflow-x: clip)
+========================================================================== */
+html,
+body {
+max-width: 100%;
+overflow-x: clip;
+box-sizing: border-box;
+}
+.playground-shell {
+max-width: 1600px;
+width: 100%;
+margin: 0 auto;
+padding: 12px 16px 14px;
+display: flex;
+flex-direction: column;
+min-height: 100vh;
+min-height: 100dvh;
+box-sizing: border-box;
+overflow-x: clip;
+}
+/* Prevent iframe from swallowing pointer events while dragging the 60/40 splitter */
+.playground-shell.is-resizing,
+.playground-shell.is-resizing * {
+cursor: col-resize !important;
+user-select: none !important;
+}
+.playground-shell.is-resizing iframe {
+pointer-events: none !important;
+}
+.topbar-container,
+.topbar-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 10px;
+position: sticky;
+top: 6px;
+z-index: 1000;
+flex-shrink: 0;
+}
+/* ==========================================================================
+BENTO SPLIT GRID (DEFAULT 60% LEFT / 40% RIGHT ON DESKTOP >= 900px)
+========================================================================== */
+.stage-split-grid {
+--bento-left-pct: 60%;
+display: grid;
+grid-template-columns:
+minmax(0, var(--bento-left-pct, 60%)) 10px minmax(0, calc(100% - var(--bento-left-pct, 60%) - 10px));
+gap: 0;
+flex: 1 1 0%;
+min-height: 0;
+min-width: 0;
+width: 100%;
+align-items: stretch;
+}
+.stage-split-grid>* {
+min-width: 0;
+min-height: 0;
+max-width: 100%;
+}
+/* Draggable Split Gutter Handle (#bentoSplitResizer) */
+.bento-split-resizer {
+width: 10px;
+cursor: col-resize;
+display: flex;
+align-items: center;
+justify-content: center;
+position: relative;
+z-index: 30;
+user-select: none;
+touch-action: none;
+}
+.bento-split-resizer::before {
+content: '⋮';
+font-size: 14px;
+font-weight: 700;
+color: var(--text-faint);
+background-color: var(--background-secondary);
+border: 1px solid oklch(from var(--text-normal) l c h / 20%);
+border-radius: 4px;
+padding: 8px 1px;
+line-height: 1;
+transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+.bento-split-resizer:hover::before,
+.playground-shell.is-resizing .bento-split-resizer::before {
+color: var(--interactive-accent);
+border-color: var(--interactive-accent);
+background-color: var(--background-primary);
+transform: scaleY(1.1);
+}
+/* Left & Right Bento Columns */
+.bento-column {
+display: flex;
+flex-direction: column;
+gap: 10px;
+min-width: 0;
+min-height: 0;
+height: 100%;
+overflow: hidden;
+padding: 12px !important;
+box-sizing: border-box;
+}
+/* Bento Cell Shared Card Surface */
+.bento-cell {
+background-color: var(--background-secondary);
+border: 1px solid oklch(from var(--text-normal) l c h / 18%);
+border-radius: var(--button-border-radius, 6px);
+padding: 8px 12px;
+min-width: 0;
+box-sizing: border-box;
+}
+/* ==========================================================================
+LEFT COLUMN BENTO CELLS (L1 Header, L2 Screen, L3 Collapsible Steps)
+========================================================================== */
+.bento-stage-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 8px;
+flex-wrap: wrap;
+flex-shrink: 0;
+}
+.stage-title-badge {
+font-size: 11px;
+font-weight: 700;
+color: var(--interactive-accent);
+letter-spacing: 0.06em;
+white-space: nowrap;
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.stage-header-controls {
+display: flex;
+align-items: center;
+gap: 5px;
+flex-wrap: wrap;
+}
+.bento-ctrl-pill {
+display: inline-flex;
+align-items: center;
+gap: 2px;
+padding: 2px;
+border-radius: 5px;
+background-color: var(--background-primary);
+border: 1px solid oklch(from var(--text-normal) l c h / 20%);
+}
+.bento-mini-btn {
+padding: 3px 7px !important;
+font-size: 11px !important;
+min-height: 24px !important;
+line-height: 1.1 !important;
+border-radius: 4px !important;
+white-space: nowrap;
+cursor: pointer;
+}
+.zoom-val-badge {
+font-family: var(--font-monospace, monospace);
+font-size: 10px !important;
+font-weight: 700 !important;
+color: var(--interactive-accent) !important;
+padding: 3px 6px !important;
+min-width: 40px;
+text-align: center;
+background: transparent !important;
+border: none !important;
+box-shadow: none !important;
+cursor: pointer;
+}
+/* L2: Live Application Screen */
+.live-monitor-bezel {
+display: flex;
+justify-content: center;
+align-items: stretch;
+flex: 1 1 0%;
+min-height: 220px;
+margin: 0;
+overflow: hidden;
+position: relative;
+border-radius: var(--button-border-radius, 6px);
+}
+.live-frame-wrapper {
+--stage-zoom: 1;
+width: 100%;
+height: 100%;
+min-height: 220px;
+transition: width 0.22s ease;
+position: relative;
+overflow: hidden;
+display: block;
+}
+.live-frame-wrapper.mode-mobile {
+width: 375px;
+max-width: 100%;
+border: 2px solid oklch(from var(--text-normal) l c h / 30%);
+border-radius: 14px;
+overflow: hidden;
+box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+.live-frame-wrapper.mode-desktop {
+width: 100%;
+}
+.live-iframe {
+position: absolute;
+top: 0;
+left: 0;
+width: calc(100% / var(--stage-zoom, 1));
+height: calc(100% / var(--stage-zoom, 1));
+transform-origin: 0 0;
+transform: scale(var(--stage-zoom, 1));
+border: none;
+background-color: #ffffff;
+transition: transform 0.15s ease, width 0.15s ease, height 0.15s ease;
+}
+/* L3: Collapsible Guided Steps Box */
+.tutorial-box {
+background-color: var(--background-secondary);
+border: 1px solid oklch(from var(--text-normal) l c h / 20%);
+border-radius: var(--button-border-radius, 6px);
+padding: 8px 12px;
+flex-shrink: 0;
+transition: padding 0.15s ease;
+}
+.tutorial-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 8px;
+flex-wrap: nowrap;
+min-width: 0;
+}
+.tutorial-header-left {
+display: flex;
+align-items: center;
+gap: 8px;
+min-width: 0;
+flex: 1 1 auto;
+overflow: hidden;
+}
+.tutorial-step-tag {
+font-size: 10px;
+font-weight: 700;
+color: var(--interactive-accent);
+letter-spacing: 0.06em;
+white-space: nowrap;
+flex-shrink: 0;
+}
+.tutorial-collapsed-preview {
+font-size: 11px;
+color: var(--text-muted);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+display: none;
+}
+.tutorial-box.is-collapsed .tutorial-collapsed-preview {
+display: inline-block;
+}
+.tutorial-header-actions {
+display: flex;
+align-items: center;
+gap: 4px;
+flex-shrink: 0;
+}
+.tutorial-body {
+margin-top: 8px;
+padding-top: 8px;
+border-top: 1px solid oklch(from var(--text-normal) l c h / 12%);
+}
+.tutorial-box.is-collapsed .tutorial-body {
+display: none !important;
+}
+/* ==========================================================================
+RIGHT COLUMN BENTO CELLS (R1 Title, R2 Current Slide Content, R3 Controls)
+========================================================================== */
+.bento-slide-header {
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+.slidev-meta-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 6px;
+flex-wrap: wrap;
+}
+.bento-slide-body {
+flex: 1 1 0%;
+min-height: 0;
+overflow-y: auto;
+overflow-x: hidden;
+display: flex;
+flex-direction: column;
+gap: 10px;
+padding: 10px 12px;
+}
+.slidev-code-container {
+margin: 0;
+border-radius: var(--button-border-radius, 6px);
+overflow: hidden;
+max-width: 100%;
+display: flex;
+flex-direction: column;
+flex: 1 1 auto;
+min-height: 0;
+}
+.code-titlebar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+background-color: var(--background-primary);
+border: 1px solid oklch(from var(--text-normal) l c h / 20%);
+border-bottom: none;
+padding: 5px 10px;
+font-size: 11px;
+font-weight: 700;
+color: var(--text-muted);
+flex-wrap: wrap;
+gap: 6px;
+flex-shrink: 0;
+}
+.code-pre {
+margin: 0 !important;
+overflow-y: auto;
+overflow-x: auto;
+max-width: 100%;
+border-top-left-radius: 0;
+border-top-right-radius: 0;
+font-size: 11.5px;
+line-height: 1.45;
+}
+/* R3: Unified Control Dock */
+.bento-control-dock {
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.slide-nav-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 6px;
+flex-wrap: nowrap;
+}
+.tts-control-cluster {
+display: inline-flex;
+align-items: center;
+gap: 4px;
+min-width: 0;
+flex-wrap: nowrap;
+}
+.tts-speak-btn.is-speaking {
+background-color: var(--interactive-accent) !important;
+color: var(--background-primary) !important;
+font-weight: 700 !important;
+}
+.tts-lang-btn {
+font-family: var(--font-monospace, monospace);
+font-weight: 700 !important;
+color: var(--interactive-accent) !important;
+}
+/* Cartridge Action Grid */
+.cartridge-action-grid {
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 6px;
+width: 100%;
+}
+.cartridge-action-grid.no-github {
+grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.cartridge-action-grid>* {
+min-width: 0;
+max-width: 100%;
+font-size: 11px !important;
+padding: 6px 8px !important;
+text-align: center;
+justify-content: center;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+/* Desktop Bento Lock */
+@media (min-width: 900px) {
+html,
+body {
+height: 100vh;
+height: 100dvh;
+max-height: 100dvh;
+overflow: hidden !important;
+}
+.playground-shell {
+height: 100vh;
+height: 100dvh;
+max-height: 100dvh;
+overflow: hidden !important;
+}
+.stage-split-grid {
+overflow: hidden !important;
+}
+}
+/* Mobile / Portrait Stack */
+@media (max-width: 899px) {
+.playground-shell {
+padding: 10px 10px 24px;
+height: auto;
+max-height: none;
+}
+.stage-split-grid {
+grid-template-columns: minmax(0, 1fr) !important;
+gap: 14px;
+}
+.bento-split-resizer,
+.desktop-split-btn {
+display: none !important;
+}
+.bento-column {
+height: auto;
+overflow: visible;
+}
+.live-monitor-bezel,
+.live-frame-wrapper {
+min-height: 360px;
+}
+.live-frame-wrapper.mode-mobile {
+width: 100%;
+}
+.bento-slide-body {
+max-height: 420px;
+}
+}
+/* ==========================================================================
+PLAYGROUND BREADCRUMB & MODE BADGE
+- Mobile: icon home (🏠) / apps / [slug] [🎮]
+- Desktop: text home (home) / apps / [slug] [PLAYGROUND]
+========================================================================== */
+.playground-breadcrumb {
+display: inline-flex;
+align-items: center;
+flex-wrap: nowrap !important;
+gap: 6px;
+font-family: var(--font-monospace, monospace);
+font-size: 13px;
+min-width: 0;
+flex: 1 1 auto;
+overflow: visible;
+user-select: none;
+}
+.playground-breadcrumb .prompt-item {
+font-weight: 600;
+white-space: nowrap;
+color: var(--text-normal);
+transition: color 0.15s ease;
+display: inline-flex;
+align-items: center;
+}
+.playground-breadcrumb a.prompt-item:hover {
+text-decoration: underline !important;
+color: var(--interactive-accent);
+filter: brightness(1.2);
+}
+.playground-breadcrumb .prompt-sep {
+color: var(--text-muted, #7c8872);
+font-weight: 700;
+opacity: 0.75;
+user-select: none;
+flex-shrink: 0;
+}
+.playground-breadcrumb .prompt-page {
+color: var(--text-normal, #f3f4ef);
+font-weight: 700;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+min-width: 0;
+max-width: 260px;
+flex-shrink: 1;
+}
+.playground-mode-badge {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-family: var(--font-monospace, monospace);
+font-weight: 700;
+border-radius: 4px;
+background-color: oklch(from var(--interactive-accent) 45% c h / 18%);
+border: 1px solid oklch(from var(--interactive-accent) 55% c h / 40%);
+color: var(--interactive-accent);
+line-height: 1;
+user-select: none;
+flex-shrink: 0;
+margin-left: 2px;
+vertical-align: middle;
+font-size: 10px;
+padding: 3px 7px;
+letter-spacing: 0.04em;
+text-transform: uppercase;
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.theme-light .playground-mode-badge {
+background-color: oklch(from var(--interactive-accent) 65% c h / 22%);
+border-color: oklch(from var(--interactive-accent) 45% c h / 50%);
+color: var(--interactive-accent);
+}
+.playground-breadcrumb .prompt-home .home-icon {
+display: none !important;
+}
+.playground-breadcrumb .prompt-home .home-text {
+display: inline-block !important;
+font-weight: 700;
+}
+.playground-mode-badge .badge-icon-mobile {
+display: none !important;
+}
+.playground-mode-badge .badge-text-desktop {
+display: inline-block !important;
+}
+@media (max-width: 768px) {
+.playground-breadcrumb {
+font-size: 11px !important;
+gap: 4px !important;
+}
+.playground-breadcrumb .prompt-home .home-icon {
+display: inline-block !important;
+font-size: 12px !important;
+line-height: 1 !important;
+}
+.playground-breadcrumb .prompt-home .home-text {
+display: none !important;
+}
+.playground-breadcrumb .prompt-page {
+max-width: 130px !important;
+}
+.playground-mode-badge {
+padding: 2px 5px !important;
+font-size: 11px !important;
+border-radius: 4px !important;
+}
+.playground-mode-badge .badge-icon-mobile {
+display: inline-block !important;
+font-size: 11px !important;
+line-height: 1 !important;
+}
+.playground-mode-badge .badge-text-desktop {
+display: none !important;
+}
+}
+</style>
+<script>
+window.__ARCADE_CURRENT_SLUG__ = "radiansincostan";
+window.__ARCADE_APP_META__ = {"slug":"radiansincostan","id":"radiansincostan","title":"📐 Unit Circle Resolver","sector":"edu","category":"MATH & CANVAS","scope":["edu"],"fileSize":"6.8 KB","tags":["SVG Arc","Math Engine","Zero-Backend"],"overview":"Interactive trigonometric unit circle calculator. Drag dynamic angle point to solve real-time sin, cos, and tan with exact radical fractions.","badge":"v2.4","img":"apps/radiansincostan/img.webp","thumbnail":"apps/radiansincostan/img.webp","imgLight":"apps/radiansincostan/img-lightmode.webp","imgDark":"apps/radiansincostan/img-darkmode.webp","obsidianImgProperty":"[[img-lightmode.webp]], [[img-darkmode.webp]]","linkLive":"apps/radiansincostan/index.html","linkSubpage":"page-playground.html?app=radiansincostan","linkPlayground":"apps/radiansincostan/index_playground.html","linkGithub":"https://github.com/fadhlisl/fadhlisl-my-id/blob/main/apps/radiansincostan/standalone.md"};
+</script>
+</head>
+<body class="theme-dark" data-app-slug="radiansincostan">
+<div class="playground-shell" id="playgroundShell">
+<header class="view-header topbar-container topbar-bar sticky-topbar" id="stickyNavbar" data-role="sticky-navbar">
+<nav class="cli-prompt-line playground-breadcrumb" id="cliPromptLine" data-role="cli-breadcrumb"
+aria-label="Breadcrumb">
+<a href="../../page-apps.html" class="prompt-item prompt-home" style="text-decoration: none; color: inherit;"
+title="Return to Software Library">
+<span class="home-icon" aria-hidden="true">🏠</span>
+<span class="home-text">home</span>
+</a>
+<span class="prompt-sep">/</span>
+<a href="../../page-apps.html" class="prompt-item prompt-folder" style="text-decoration: none; color: inherit;"
+title="Return to Software Library">apps</a>
+<span class="prompt-sep">/</span>
+<span class="prompt-item prompt-page" id="breadcrumbAppName">unit-circle</span>
+<span class="playground-mode-badge" title="Dual-Panel Interactive Playground Mode">
+<span class="badge-icon-mobile" aria-hidden="true">🎮</span>
+<span class="badge-text-desktop">Playground</span>
+</span>
+<input type="search" id="topSearchInput" class="inline-ghost-input" enterkeyhint="search" autocomplete="off"
+autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Terminal Search Prompt"
+style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; margin: 0; padding: 0; border: 0;">
+<span class="inline-typed-text" id="terminalTypedText" style="display: none;"></span>
+<div class="suggestion-container" id="suggestionBox" style="display: none;"></div>
+</nav>
+<div class="topbar-action-group" id="topbarActionGroup">
+<button type="button" class="topbar-btn" id="searchActionBtn" title="Search Cartridges [/]">
+<span>🔍</span>
+</button>
+<button type="button" class="topbar-btn desktop-only-btn" id="historyActionBtn"
+title="Recent Search &amp; App History">
+<span>🕒</span>
+</button>
+<button type="button" class="topbar-btn" id="themeToggleBtn" data-action="toggle-theme"
+title="Toggle Light/Dark Theme">
+<span id="themeIcon" data-sync="theme-icon">☀️</span> <span id="themeText" data-sync="theme-text">Light</span>
+</button>
+<button type="button" class="topbar-btn" data-action="toggle-fullscreen" title="Toggle Grand Fullscreen [F11]">
+<span>⛶</span>
+</button>
+<a href="../../page-apps.html" class="button-link topbar-btn back-lib-btn" title="Back to Library [ESC]"
+style="text-decoration: none;">
+<span>⬅ Back</span><span class="back-lib-esc"> [ESC]</span>
+</a>
+</div>
+</header>
+<main class="stage-split-grid" id="bentoSplitGrid">
+<section class="workspace-leaf bento-column" id="bentoLeftPane">
+<div class="bento-cell bento-stage-header">
+<div class="stage-title-badge">
+<span>📺 LIVE STAGE</span>
+</div>
+<div class="stage-header-controls">
+<div class="bento-ctrl-pill" role="group" aria-label="Stage Viewport Mode">
+<button type="button" class="bento-mini-btn" id="viewMobileBtn" title="Mobile Portrait Preview (375px)">📱
+Mobile</button>
+<button type="button" class="bento-mini-btn is-active" id="viewDesktopBtn" title="Full Desktop Preview">💻
+Desktop</button>
+</div>
+<div class="bento-ctrl-pill" role="group" aria-label="Preview Screen Zoom Controls">
+<button type="button" class="bento-mini-btn" id="zoomOutBtn" title="Zoom Out Screen (-)">−</button>
+<button type="button" class="zoom-val-badge" id="zoomResetBtn"
+title="Reset Screen Zoom (100%)">100%</button>
+<button type="button" class="bento-mini-btn" id="zoomInBtn" title="Zoom In Screen (+)">+</button>
+</div>
+<button type="button" class="bento-mini-btn desktop-split-btn" id="expandSplitBtn"
+title="Toggle Split Ratio (60:40 Default vs 75:25 Expanded Stage)">◧ 60:40</button>
+<button type="button" class="bento-mini-btn" id="reloadFrameBtn" title="Reload Live Application">⟲</button>
+</div>
+</div>
+<div class="view-content live-monitor-bezel">
+<div class="live-frame-wrapper mode-desktop" id="frameWrapper">
+<iframe id="liveAppIframe" class="live-iframe" src="index.html"
+title="Live Application Preview"></iframe>
+</div>
+</div>
+<div class="tutorial-box" id="tutorialBox">
+<div class="tutorial-header">
+<div class="tutorial-header-left">
+<span class="tutorial-step-tag" id="tutorialStepLabel">STEP 1 OF 3</span>
+<span class="tutorial-collapsed-preview" id="tutorialCollapsedPreview">1. Drag the Angle Point</span>
+</div>
+<div class="tutorial-header-actions">
+<button type="button" class="bento-mini-btn" id="prevTutorialBtn" title="Previous Step">◀</button>
+<button type="button" class="bento-mini-btn mod-cta" id="nextTutorialBtn" title="Next Step">Next
+▶</button>
+<button type="button" class="bento-mini-btn" id="toggleTutorialBtn"
+title="Collapse / Expand Guided Steps">▾ Hide</button>
+</div>
+</div>
+<div class="tutorial-body" id="tutorialBody">
+<h3 style="margin: 0 0 4px; font-size: 12.5px; color: var(--text-normal);" id="tutorialTitle">1. Drag the
+Angle Point</h3>
+<p style="margin: 0; font-size: 11.5px; color: var(--text-muted); line-height: 1.45;" id="tutorialText">
+Click and drag the circular control point around the perimeter. Watch the degree angle update along with
+the live radian conversion.
+</p>
+</div>
+</div>
+</section>
+<div class="bento-split-resizer" id="bentoSplitResizer" role="separator" aria-orientation="vertical"
+title="Drag to resize Left/Right split (Double-click to reset 60% / 40%)"></div>
+<section class="workspace-leaf bento-column" id="bentoRightPane">
+<div class="bento-cell bento-slide-header">
+<div class="slidev-meta-header">
+<span class="tag" id="slidevElementTag">COMPONENT: SVG_WEDGE_ENGINE</span>
+<div style="display: flex; align-items: center; gap: 6px;">
+<span style="font-size: 10px; color: var(--text-muted); font-weight: 700;" id="bentoCartridgeTitle">Unit
+Circle Resolver</span>
+<span class="tag" id="slidevCounterPill">01 / 04</span>
+</div>
+</div>
+<h2 style="margin: 0; font-size: 14px; color: var(--text-normal); line-height: 1.3;" id="slidevHeading">1.
+Dynamic SVG Arc &amp; Wedge Geometry</h2>
+</div>
+<div class="bento-cell bento-slide-body" id="bentoSlideBody">
+<p style="margin: 0; font-size: 12px; color: var(--text-muted); line-height: 1.5;" id="slidevDescription">
+Instead of heavy canvas rendering libraries, the arc wedge is calculated with native SVG Arc Path commands
+(<code>M</code>, <code>L</code>, <code>A</code>) dynamically tracking the angle theta.
+</p>
+<div class="slidev-code-container">
+<div class="code-titlebar">
+<span id="codeFilename">wedge_calculator.js</span>
+<div style="display: flex; gap: 6px;">
+<button type="button" class="bento-mini-btn" id="copyCodeSnippetBtn" title="Copy Slide Code Snippet">📋
+Copy</button>
+<button type="button" class="bento-mini-btn" id="copyFullSourceBtn"
+title="Copy Full Cartridge HTML Source">📄 Full HTML</button>
+</div>
+</div>
+<pre class="code-pre"><code id="codeSnippetBody">// Calculating dynamic SVG path
+const r = ang * Math.PI / 180;
+const x = cx + R * Math.cos(r);
+const y = cy - R * Math.sin(r);</code></pre>
+</div>
+</div>
+<div class="bento-cell bento-control-dock">
+<div class="slide-nav-bar">
+<button type="button" class="bento-mini-btn" id="prevSlidevBtn" title="Previous Slide [←]">◀ Prev</button>
+<div class="tts-control-cluster" role="group" aria-label="Text to Speech Controls">
+<button type="button" class="bento-mini-btn tts-speak-btn" id="ttsSpeakBtn"
+title="Read Current Slide Aloud (Text-to-Speech)">🔊 Speak</button>
+<button type="button" class="bento-mini-btn tts-lang-btn" id="ttsLangBtn"
+title="Switch TTS Voice Language (Bahasa Indonesia / English)">🌐 EN</button>
+<span style="font-size: 10px; color: var(--text-muted); white-space: nowrap;" id="slidevIndicatorText">1 /
+4</span>
+</div>
+<button type="button" class="bento-mini-btn mod-cta" id="nextSlidevBtn" title="Next Slide [→]">Next
+▶</button>
+</div>
+<div class="cartridge-action-grid" id="cartridgeActionGrid">
+<a href="index.html" id="downloadAppBtn" download="radiansincostan.html"
+class="button-link mod-cta" title="Download Standalone Single-File .html">
+<span>⬇️ Download</span>
+</a>
+<a href="https://github.com/fadhlisl/fadhlisl-my-id/blob/main/apps/radiansincostan/standalone.md" id="githubRepoBtn" target="_blank"
+rel="noopener noreferrer" class="button-link" title="Open GitHub Repository / Source Markdown">
+<span>🐙 GitHub</span>
+</a>
+<a href="index.html" id="openExternalTabBtn" target="_blank" rel="noopener noreferrer"
+class="button-link" title="Open Live Standalone App in New Tab">
+<span>↗ Open Live</span>
+</a>
+</div>
+</div>
+</section>
+</main>
+</div>
+<script src="../../page-playground.js"></script>
+</body>
+</html>

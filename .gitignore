@@ -1,0 +1,10 @@
+# PROJECT BUILDS & LOCAL ARTIFACTS
+public/
+trash-bin/
+*.env
+
+
+# MODULES
+node_modules/
+
+

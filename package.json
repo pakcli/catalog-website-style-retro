@@ -1,0 +1,11 @@
+{
+  "name": "retro-template-catalog-website",
+  "version": "2.1.0",
+  "description": "Tactile retro computing catalog template & dual-panel Bento playground",
+  "scripts": {
+    "build": "node src/modules/build-bundle.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
