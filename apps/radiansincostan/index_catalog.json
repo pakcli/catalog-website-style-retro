@@ -1,0 +1,27 @@
+{
+  "slug": "radiansincostan",
+  "id": "radiansincostan",
+  "title": "📐 Unit Circle Resolver",
+  "sector": "edu",
+  "category": "MATH & CANVAS",
+  "scope": [
+    "edu"
+  ],
+  "fileSize": "6.8 KB",
+  "tags": [
+    "SVG Arc",
+    "Math Engine",
+    "Zero-Backend"
+  ],
+  "overview": "Interactive trigonometric unit circle calculator. Drag dynamic angle point to solve real-time sin, cos, and tan with exact radical fractions.",
+  "badge": "v2.4",
+  "img": "apps/radiansincostan/img.webp",
+  "thumbnail": "apps/radiansincostan/img.webp",
+  "imgLight": "apps/radiansincostan/img-lightmode.webp",
+  "imgDark": "apps/radiansincostan/img-darkmode.webp",
+  "obsidianImgProperty": "[[img-lightmode.webp]], [[img-darkmode.webp]]",
+  "linkLive": "apps/radiansincostan/index.html",
+  "linkSubpage": "page-playground.html?app=radiansincostan",
+  "linkPlayground": "apps/radiansincostan/index_playground.html",
+  "linkGithub": "https://github.com/fadhlisl/fadhlisl-my-id/blob/main/apps/radiansincostan/standalone.md"
+}

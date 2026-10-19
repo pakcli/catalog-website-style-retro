@@ -1,0 +1,35 @@
+# ==============================================================================
+# RETRO TEMPLATE CATALOG WEBSITE -- CONFIGURATION TEMPLATE (build-config.yamlexample)
+# ==============================================================================
+# Copy this file to 'build-config.yaml' and customize for your own instance:
+#   cp build-config.yamlexample build-config.yaml
+# ==============================================================================
+
+# 1. Project Metadata
+project:
+  name: "retro-template-catalog-website"
+  title: "Retro Template Catalog Website"
+  version: "1.1"
+  description: "Tactile retro computing catalog template & dual-panel Bento playground"
+  author: "pakcli"
+  license: "MIT"
+
+# 2. Deployment & URLs (Update with your own repository and domain)
+urls:
+  base: "YOUR-URL-DOMAIN.COM HERE"
+  github: "https://github.com/pakcli/retro-template-catalog-website"
+  author_github: "https://github.com/pakcli"
+
+# 3. Path Directories (Dynamic & Configurable)
+paths:
+  apps: "apps"          # Cartridge directory (apps/ - default example cartridges live here)
+  source: "src"         # Core source engine (src/)
+  output: "public"      # Compiled distribution (public/)
+
+# 4. Engine Features & Preferences
+features:
+  theme_accent_colourcode: "olive   # First Accent: Retro Olive Gold (#b0a84a)
+  theme_mode_default: "theme-dark" # Authentic Dark CRT Phosphor Mode
+  bento_split_default: "60/40"     # 60% Left Stage / 40% Right Slidev Deck
+  enable_tts: true                 # 3-Stage Hybrid Text-to-Speech Engine (true / false)
+  enable_slidev: true              # Interactive Slide Presentation Deck (true / false)

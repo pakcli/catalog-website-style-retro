@@ -1,0 +1,118 @@
+/* ==========================================================================
+   TERMINAL & PROMPT ANIMATIONS STYLESHEET
+   File: src/theme/terminal.css
+   Purpose: Standalone stylesheet for retro CLI terminal animations,
+            blinking pipe cursor (|), and interactive command prompt states.
+            RULE #1 Compliant: Does NOT edit theme.css.
+   ========================================================================== */
+
+/* 1. Terminal Blinking Keyframes (Blink & Terminal-Blink) */
+@keyframes blink {
+  0%, 49.9% {
+    opacity: 1;
+    visibility: visible;
+  }
+  50%, 100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes terminal-blink {
+  0%, 49.9% {
+    opacity: 1;
+    visibility: visible;
+  }
+  50%, 100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 2. Terminal Cursor (| Pipe Cursor) - Strict High-Specificity Override */
+.cli-prompt-line .terminal-cursor,
+header[data-role="sticky-navbar"] .terminal-cursor,
+.library-breadcrumb .terminal-cursor,
+.playground-breadcrumb .terminal-cursor,
+.terminal-cursor,
+.cursor-blink {
+  display: inline-block !important;
+  color: var(--interactive-accent) !important;
+  font-weight: 700 !important;
+  font-family: var(--font-monospace, 'JetBrains Mono', monospace) !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  margin-left: 2px !important;
+  margin-right: 2px !important;
+  user-select: none !important;
+  vertical-align: middle !important;
+  animation: terminal-blink 1s step-end infinite !important;
+  cursor: pointer !important;
+}
+
+/* 3. Inline Typing Slot - Always visible so '> |' blinks on page load */
+.cli-prompt-line .inline-typing-slot,
+header[data-role="sticky-navbar"] .inline-typing-slot,
+.inline-typing-slot {
+  display: inline-flex !important;
+  align-items: center !important;
+  position: relative !important;
+  min-width: 14px !important;
+  min-height: 20px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: text !important;
+  vertical-align: middle !important;
+}
+
+.inline-typed-text {
+  display: inline !important;
+  color: var(--text-normal) !important;
+  font-family: var(--font-monospace, monospace) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: pre !important;
+}
+
+.theme-light .inline-typed-text {
+  color: var(--text-normal, #12140e) !important;
+}
+
+.theme-dark .inline-typed-text {
+  color: var(--text-normal, #f3f4ef) !important;
+}
+
+#topSearchInput,
+.cli-prompt-line input.inline-ghost-input,
+input.inline-ghost-input[type="search"],
+input.inline-ghost-input,
+.inline-ghost-input {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: transparent !important;
+  caret-color: transparent !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border-radius: 0 !important;
+  font-size: 16px !important; /* Prevents mobile iOS auto-zoom */
+  cursor: text !important;
+  z-index: 2 !important;
+}

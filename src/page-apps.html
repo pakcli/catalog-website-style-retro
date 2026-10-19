@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark" style="background-color: #161a14; color: #d8dec9;">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function () {
+      try {
+        var m = localStorage.getItem('arcade_theme_mode') || 'theme-dark';
+        var a = localStorage.getItem('arcade_accent_color') || '#b0a84a';
+        var doc = document.documentElement;
+        doc.classList.remove('theme-dark', 'theme-light');
+        doc.classList.add(m);
+        doc.setAttribute('data-theme', m);
+        doc.style.setProperty('--interactive-accent', a);
+        if (m === 'theme-light') {
+          doc.style.backgroundColor = '#f4f6f0';
+          doc.style.color = '#191d17';
+        } else {
+          doc.style.backgroundColor = '#161a14';
+          doc.style.color = '#d8dec9';
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibe-Coded Software Arcade | Fadhli S Lubis</title>
+  
+  <!-- Font Monospace & Vintage -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style/theme/vintage-computer/theme.css">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Instant Anti-FOUC Base Canvas */
+    html, body {
+      background-color: var(--background-primary, #161a14);
+      color: var(--text-normal, #d8dec9);
+    }
+    html.theme-light, html.theme-light body {
+      background-color: var(--background-primary, #f4f6f0);
+      color: var(--text-normal, #191d17);
+    }
+
+    /* ==========================================================================
+       PAGE-SPECIFIC LAYOUT ONLY - ZERO DUPLICATE COLOR OR BUTTON STYLES
+       All visual styling comes directly from referense-theme/theme.css
+       ========================================================================== */
+    .topbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      margin-bottom: 20px;
+      position: sticky;
+      top: 8px;
+      z-index: 1000;
+      padding: 6px 14px !important;
+    }
+
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    /* Thumbnail SVG Artwork Styling (Dark CRT Phosphor Display Well) */
+    .thumb-svg {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #191e17 0%, #0a0d09 100%) !important;
+    }
+
+    .terminal-cursor {
+      display: inline-block;
+      color: var(--interactive-accent);
+      font-weight: 700;
+      font-family: var(--font-monospace, monospace);
+      font-size: 14px;
+      line-height: 1;
+      margin-left: 2px;
+      user-select: none;
+      vertical-align: middle;
+      animation: terminal-blink 1s step-end infinite;
+    }
+
+    @keyframes terminal-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .kbd-shortcut {
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid oklch(from var(--text-normal) l c h / 25%);
+      background-color: var(--background-paper);
+      color: var(--interactive-accent);
+      font-weight: 700;
+    }
+
+    @media (max-width: 700px) {
+      .filter-bar { flex-direction: column; align-items: stretch; }
+    }
+
+    /* ==========================================================================
+       LIBRARY BREADCRUMB
+       - Mobile:  icon home (🏠) / apps >
+       - Desktop: text home (home) / apps >
+       ========================================================================== */
+    .library-breadcrumb {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: nowrap !important;
+      gap: 6px;
+      font-family: var(--font-monospace, monospace);
+      font-size: 13px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: visible;
+      user-select: none;
+      padding-left: 4px;
+    }
+
+    .library-breadcrumb .prompt-item {
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--text-normal);
+      transition: color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .library-breadcrumb a.prompt-item:hover {
+      text-decoration: underline !important;
+      color: var(--interactive-accent);
+      filter: brightness(1.2);
+    }
+
+    .library-breadcrumb .prompt-sep {
+      color: var(--text-muted, #7c8872);
+      font-weight: 700;
+      opacity: 0.75;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .library-breadcrumb .prompt-page {
+      color: var(--text-normal, #f3f4ef);
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+      max-width: 220px;
+      flex-shrink: 1;
+    }
+
+    /* Desktop View (> 768px): Text home */
+    .library-breadcrumb .prompt-home .home-icon {
+      display: none !important;
+    }
+
+    .library-breadcrumb .prompt-home .home-text {
+      display: inline-block !important;
+      font-weight: 700;
+    }
+
+    /* Caret > is always visible in library as prompt ending > */
+    .library-breadcrumb .prompt-terminal-caret {
+      display: inline-flex !important;
+      user-select: none;
+      color: var(--text-muted, #7c8872);
+      font-weight: 700;
+    }
+
+    /* Always display inline-typing-slot so '> |' is visible and blinking */
+    .inline-typing-slot {
+      display: inline-flex !important;
+      align-items: center;
+      position: relative;
+      cursor: text;
+    }
+
+    /* Mobile Portrait View (<= 768px): Icon 🏠 / apps > */
+    @media (max-width: 768px) {
+      .library-breadcrumb {
+        font-size: 11px !important;
+        gap: 4px !important;
+      }
+
+      .library-breadcrumb .prompt-home .home-icon {
+        display: inline-block !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+      }
+
+      .library-breadcrumb .prompt-home .home-text {
+        display: none !important;
+      }
+
+      .library-breadcrumb .prompt-page {
+        max-width: 120px !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="theme-dark">
+
+  <div class="arcade-shell">
+
+    <!-- 1. HERO SECTION = MASTER 3.5" FLOPPY DISKETTE (v01-01) -->
+    <section class="workspace-leaf hero-floppy-disk">
+      <!-- Physical 45° DIY Corner Cut on the Hero Floppy Diskette -->
+      <div class="floppy-corner-cut"></div>
+
+      <!-- Title + 45° Edge Crop = 1 Single Line Height (No fake 3-dot noise) -->
+      <div class="hero-top-title-row">
+        <h1 class="hero-main-title">💾 Vibe-Coded Software Arcade</h1>
+      </div>
+
+      <!-- Quick Description -->
+      <p class="hero-quick-desc">
+        Standalone, single-file, zero-backend web apps &amp; hybrid Slidev decks. Click any thumbnail to launch the <strong>Dual-Panel Playground</strong> or run offline.
+      </p>
+
+      <!-- 4 Functional Metric Rows (Mobile Portrait: 4 rows list | Desktop & Landscape: 1 row x 4 cols) -->
+      <div class="hero-metric-row">
+        <div class="metric-box">
+          <span class="metric-label">APPS LOADED</span>
+          <strong class="metric-val" id="heroAppsLoadedVal">7 Disks</strong>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">TIME (WIB)</span>
+          <strong class="metric-val" id="heroWibClockVal">--:--:-- WIB</strong>
+        </div>
+        <div class="metric-box is-clickable" style="cursor: pointer;" data-action="open-accent-picker" title="Click to customize system accent color">
+          <span class="metric-label">ACCENT</span>
+          <strong class="metric-val" style="color: var(--interactive-accent);">
+            <span class="accent-dot"></span>
+            <span data-sync="accent-hex">#B0A84A</span>
+          </strong>
+        </div>
+        <a href="https://github.com/fadhlisl/fadhlisl-my-id" target="_blank" rel="noopener noreferrer" class="metric-box is-clickable" title="Open GitHub Repository">
+          <span class="metric-label">GITHUB</span>
+          <strong class="metric-val" style="color: var(--interactive-accent);">fadhlisl ↗</strong>
+        </a>
+      </div>
+    </section>
+
+    <!-- 2. STICKY CLI NAVBAR -->
+    <header class="view-header topbar-container sticky-topbar" id="stickyNavbar" data-role="sticky-navbar">
+      
+      <!-- Sequence: Desktop: home / apps > | Mobile: 🏠 / apps > -->
+      <nav class="cli-prompt-line library-breadcrumb" id="cliPromptLine" data-role="cli-breadcrumb" aria-label="Breadcrumb">
+        <!-- 1. Home Link: Icon on Mobile, Text on Desktop -->
+        <a href="page-apps.html" class="prompt-item prompt-home" style="text-decoration: none; color: inherit;" title="Software Library Home">
+          <span class="home-icon" aria-hidden="true">🏠</span>
+          <span class="home-text">home</span>
+        </a>
+        <span class="prompt-sep">/</span>
+
+        <!-- 2. Apps Folder Segment -->
+        <span class="prompt-item prompt-folder">apps</span>
+
+        <!-- Dynamic Category / Page Segment (Only visible if specific sector/card active) -->
+        <span class="prompt-sep prompt-sep-page" id="promptSepPage" style="display: none;">/</span>
+        <span class="prompt-item prompt-page" id="promptPageSegment" style="display: none;"></span>
+
+        <!-- Seamless inline typing slot right on the >_ without any box/container -->
+        <span class="prompt-sep prompt-terminal-caret">&gt;</span>
+        <div class="inline-typing-slot" id="inlineTypingSlot">
+          <span class="inline-typed-text" id="terminalTypedText"></span>
+          <span class="terminal-cursor cursor-blink" id="terminalCursor" title="Click to open Search &amp; History">|</span>
+          <input type="search" id="topSearchInput" class="inline-ghost-input" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Terminal Prompt">
+        </div>
+
+        <!-- Floating Suggestion / History Popover hanging right under the prompt -->
+        <div class="suggestion-container" id="suggestionBox" style="display: none;"></div>
+      </nav>
+
+      <!-- Action buttons (3 buttons: Fullscreen, Search/Suggestions, Theme Toggle) — hidden while typing -->
+      <div class="topbar-action-group" id="topbarActionGroup">
+        <button type="button" class="topbar-btn" data-action="toggle-fullscreen" title="Toggle Grand Fullscreen [F11]">
+          <span>⛶</span>
+        </button>
+        <button type="button" class="topbar-btn" id="searchActionBtn" title="Search Disks &amp; History">
+          <span>🔍</span>
+        </button>
+        <button type="button" class="topbar-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+          <span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
+        </button>
+      </div>
+
+    </header>
+
+    <!-- 3. SECTOR FILTER BAR (Dynamic Pillars from _catalog.json) -->
+    <section class="filter-bar">
+      <div class="workspace-tab-header-container" style="margin-bottom: 0;">
+        <button type="button" class="workspace-tab-header is-active" data-scope="all">
+          All
+        </button>
+        <button type="button" class="workspace-tab-header" data-scope="edu">
+          Edu
+        </button>
+        <button type="button" class="workspace-tab-header" data-scope="tools">
+          Tools
+        </button>
+        <button type="button" class="workspace-tab-header" data-scope="games">
+          Games
+        </button>
+        <button type="button" class="workspace-tab-header" data-scope="electron">
+          Electron
+        </button>
+      </div>
+
+      <div class="filter-status-row">
+        <span id="diskCounterBadge" style="font-size: 11px; color: var(--text-muted); font-weight: 700; padding: 4px 10px; background-color: var(--background-secondary); border: 1px solid oklch(from var(--text-normal) l c h / 15%); border-radius: 4px; white-space: nowrap;">💾 7/7</span>
+        <button type="button" class="pin-only-toggle-btn" id="pinOnlyToggleBtn" title="Show Pinned Disks Only">★ PIN ONLY</button>
+        <div class="mobile-view-toggle" role="group" aria-label="Mobile View Mode Toggle">
+          <button type="button" class="view-mode-btn is-active" id="gridViewBtn" data-view-mode="grid" title="GridView (2 Columns Compact)">⊞</button>
+          <span class="toggle-sep">|</span>
+          <button type="button" class="view-mode-btn" id="detailViewBtn" data-view-mode="detail" title="DetailView (1 Column Full)">▤</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. RECTANGULAR CATALOG CARDS GRID -->
+    <main class="app-cards-grid mobile-view-grid" id="appsGrid">
+
+      <!-- CARD 1: MODULAR SLIDEV HYBRID DECK -->
+      <article class="bases-cards-item floppy-card" data-app="vibe-arcade-deck" data-scope="edu tools electron" data-name="modular slidev hybrid deck markdown presentation">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">16.4 KB</span>
+            <span class="floppy-cat-badge">SLIDEV &amp; DOCS</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="vibe-arcade-deck">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=vibe-arcade-deck" class="floppy-media-screen view-content" title="Click to launch Modular Slidev Deck in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="apps/vibe-arcade-deck_img-darkmode.webp" data-thumb-slug="vibe-arcade-deck" class="thumb-img" alt="Modular Slidev Deck" loading="lazy" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried='true';this.src='assets/thumbnails/vibe-arcade-deck.webp';}else{this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';}" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">📑 Modular Slidev Deck</h3>
+          <p class="floppy-overview">
+            Client-rendered Markdown presentation engine with hybrid *_standalone_slidev.html check, FNV-1a hash cache, Dual-Screen Presenter Mode, and runnable JS blocks.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">16.4 KB</span>
+          <div class="tags-group">
+            <span class="tag">#Slidev MD</span>
+            <span class="tag">#Hash Cache</span>
+            <span class="tag">#Zero-Backend</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=vibe-arcade-deck" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/vibe-arcade-deck_standalone_slidev.html" download="vibe-arcade-deck_standalone_slidev.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/vibe-arcade-deck_standalone_slidev.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 2: UNIT CIRCLE RESOLVER -->
+      <article class="bases-cards-item floppy-card" data-app="radiansincostan" data-scope="edu math" data-name="unit circle trigonometri sincostan">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">6.8 KB</span>
+            <span class="floppy-cat-badge">MATH &amp; CANVAS</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="radiansincostan">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=radiansincostan" class="floppy-media-screen view-content" title="Click to launch Unit Circle in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="apps/radiansincostan_img-darkmode.webp" data-thumb-slug="radiansincostan" class="thumb-img" alt="Unit Circle Resolver" loading="lazy" onerror="if(!this.dataset.fallbackTried){this.dataset.fallbackTried='true';this.src='assets/thumbnails/radiansincostan.webp';}else{this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';}" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">📐 Unit Circle Resolver</h3>
+          <p class="floppy-overview">
+            Interactive trigonometric unit circle calculator. Drag dynamic angle point to solve real-time sin, cos, and tan with exact radical fractions.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">6.8 KB</span>
+          <div class="tags-group">
+            <span class="tag">#SVG Arc</span>
+            <span class="tag">#Math Engine</span>
+            <span class="tag">#Zero-Backend</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=radiansincostan" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/radiansincostan.html" download="interactive-unit-circle.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/radiansincostan.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 3: BUDE'S LOTEK ORDERING -->
+      <article class="bases-cards-item floppy-card" data-app="lotek-offline" data-scope="fnb web" data-name="bude lotek karedok order whatsapp crm">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">14.2 KB</span>
+            <span class="floppy-cat-badge">WEB &amp; WHATSAPP</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="lotek-offline">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=lotek-offline" class="floppy-media-screen view-content" title="Click to launch Lotek Order in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="assets/thumbnails/lotek-offline.webp" class="thumb-img" alt="Bude's Lotek Ordering" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">🥗 Bude's Lotek Ordering</h3>
+          <p class="floppy-overview">
+            Offline-first food ordering system with zero authentication. Automatically compiles menu selections and spicy notes into formatted WhatsApp payloads.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">14.2 KB</span>
+          <div class="tags-group">
+            <span class="tag">#LocalStorage</span>
+            <span class="tag">#WA Webhook</span>
+            <span class="tag">#PWA Offline</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=lotek-offline" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/lotek-offline.html" download="bude-lotek-order.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/lotek-offline.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 4: WA TEXT & REGEX SANITIZER -->
+      <article class="bases-cards-item floppy-card" data-app="wa-parser" data-scope="web tools" data-name="wa copy text parser regex sanitize">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">8.1 KB</span>
+            <span class="floppy-cat-badge">UTILITY &amp; TEXT</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="wa-parser">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=wa-parser" class="floppy-media-screen view-content" title="Click to launch WA Parser in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="assets/thumbnails/wa-parser.webp" class="thumb-img" alt="WA Text Parser" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">💬 WA Text Parser</h3>
+          <p class="floppy-overview">
+            Instant clipboard sanitizer and regex compiler. Converts raw notes, bullets, and messy copied text into clean, structured WhatsApp chat messages.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">8.1 KB</span>
+          <div class="tags-group">
+            <span class="tag">#Regex Engine</span>
+            <span class="tag">#URL Encoder</span>
+            <span class="tag">#Clipboard API</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=wa-parser" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/wa-parser.html" download="wa-text-parser.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/wa-parser.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 5: CLIENT-SIDE PDF EDITOR -->
+      <article class="bases-cards-item floppy-card" data-app="pdf-editor" data-scope="tools" data-name="client side pdf editor compression privacy">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">45.0 KB</span>
+            <span class="floppy-cat-badge">TOOLS &amp; PRIVACY</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="pdf-editor">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=pdf-editor" class="floppy-media-screen view-content" title="Click to launch PDF Editor in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="assets/thumbnails/pdf-editor.webp" class="thumb-img" alt="Client PDF Editor" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">📄 Client PDF Editor</h3>
+          <p class="floppy-overview">
+            Browser-native PDF viewer and drag-and-drop image compressor. Runs 100% in-browser via Canvas and Web Workers without server upload.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">45.0 KB</span>
+          <div class="tags-group">
+            <span class="tag">#PDF.js</span>
+            <span class="tag">#Canvas Worker</span>
+            <span class="tag">#100% Private</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=pdf-editor" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/pdf-editor.html" download="client-pdf-editor.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/pdf-editor.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 6: ISLAM MAKHACHEV BFITW BOX -->
+      <article class="bases-cards-item floppy-card" data-app="islam-memes" data-scope="games" data-name="islam makhachev bfitw meme ascii generator">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">5.4 KB</span>
+            <span class="floppy-cat-badge">RETRO &amp; ASCII</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="islam-memes">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=islam-memes" class="floppy-media-screen view-content" title="Click to launch ASCII Box in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="assets/thumbnails/islam-memes.webp" class="thumb-img" alt="Islam BFITW Box" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">🏆 Islam BFITW Box</h3>
+          <p class="floppy-overview">
+            Monospace ASCII art card and fighter quote generator. Precision grid box character calculation with instant one-click terminal copy.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">5.4 KB</span>
+          <div class="tags-group">
+            <span class="tag">#Monospace Grid</span>
+            <span class="tag">#ASCII Art</span>
+            <span class="tag">#Pure Vanilla</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=islam-memes" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="apps/islam-memes.html" download="islam-bfitw-box.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="apps/islam-memes.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <!-- CARD 7: FAMILY QUIZ ENGINE -->
+      <article class="bases-cards-item floppy-card" data-app="family-quiz" data-scope="games" data-name="family quiz multiplayer game interactive">
+        <div class="floppy-header-row">
+          <div class="floppy-header-meta">
+            <span class="card-filesize-top">18.6 KB</span>
+            <span class="floppy-cat-badge">GAME &amp; AUDIO</span>
+            <button type="button" class="floppy-pin-btn" title="Pin / Favorite to local storage" data-pin-target="family-quiz">
+              <span class="pin-icon">📌</span> <span class="pin-label">PIN</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="page-playground.html?app=family-quiz" class="floppy-media-screen view-content" title="Click to launch Family Quiz in Dual-Panel Playground">
+          <div class="screen-preview-slot">
+            <img src="assets/thumbnails/family-quiz.webp" class="thumb-img" alt="Family Quiz Engine" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+            <div class="launch-prompt">▶</div>
+          </div>
+        </a>
+
+        <div class="floppy-paper-label">
+          <h3 class="floppy-title">🎮 Family Quiz Engine</h3>
+          <p class="floppy-overview">
+            Multi-round interactive quiz game with sound effects, dynamic question timer, and local high-score leaderboards.
+          </p>
+        </div>
+
+        <div class="floppy-tags-row">
+          <span class="size-pill">18.6 KB</span>
+          <div class="tags-group">
+            <span class="tag">#Web Audio API</span>
+            <span class="tag">#Timer Loop</span>
+            <span class="tag">#Zero Backend</span>
+          </div>
+        </div>
+
+        <div class="floppy-action-stack">
+          <a href="page-playground.html?app=family-quiz" class="button-link mod-cta">
+            <span>🚀 Open in Playground</span>
+          </a>
+          <div class="action-sub-grid">
+            <a href="compiled-sites/family-quiz.html" download="family-quiz-game.html" class="button-link btn-download" title="Download Standalone HTML">
+              <span class="btn-icon">⬇️</span><span class="btn-label"> Download</span>
+            </a>
+            <a href="compiled-sites/family-quiz.html" target="_blank" class="button-link btn-standalone" title="Open Standalone" aria-label="Open Standalone">
+              <span class="btn-icon">↗</span><span class="btn-label"> Standalone</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+    </main>
+
+  </div>
+
+  <!-- Modular Vintage Architecture Scripts -->
+  <script src="modules/theme-engine.js"></script>
+  <script src="components/accent-picker-modal.js"></script>
+  <script src="modules/breadcrumb.js"></script>
+  <script src="modules/navigation-url.js"></script>
+  <script src="modules/markdown-processor.js"></script>
+  <script src="modules/catalog-core.js"></script>
+  <script src="modules/download-module.js"></script>
+  <script src="modules/slidev-engine.js"></script>
+  <script src="modules/speech-engine.js"></script>
+  <script src="modules/tts.js"></script>
+  <script src="modules/pipeline-optimizer.js"></script>
+  <script src="modules/winget.js"></script>
+</body>
+</html>

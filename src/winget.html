@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Arcade Winget -- Emergency Floating Quick Nav Pod</title>
+  <meta name="description" content="Multimodal rescue navigation pod with 2x2 grid, Obsidian theme accent controls, and emergency shortcuts.">
+
+  <!-- Master Obsidian Theme & Standalone Winget Stylesheet -->
+  <link rel="stylesheet" href="style/theme/vintage-computer/theme.css">
+  <link rel="stylesheet" href="style/winget.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--background-primary, #1e1e1e);
+      color: var(--text-normal, #dcddde);
+      font-family: var(--font-monospace, monospace);
+      box-sizing: border-box;
+      overflow-x: clip;
+    }
+
+    .winget-showcase-shell {
+      max-width: 520px;
+      width: 100%;
+      background: var(--background-secondary, #252525);
+      border: 1px solid var(--interactive-accent, #b0a84a);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      box-sizing: border-box;
+    }
+
+    .winget-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px dashed var(--background-modifier-border, #333);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .winget-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--interactive-accent, #b0a84a);
+      margin: 0;
+    }
+
+    .winget-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: oklch(from var(--interactive-accent) 45% c h / 20%);
+      border: 1px solid var(--interactive-accent, #b0a84a);
+      color: var(--interactive-accent, #b0a84a);
+    }
+
+    .winget-desc {
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-muted, #888);
+      margin-bottom: 20px;
+    }
+
+    .winget-action-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .winget-trigger-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 10px;
+      background: var(--background-primary, #1e1e1e);
+      border: 1px solid var(--background-modifier-border, #333);
+      border-radius: 6px;
+      color: var(--text-normal, #dcddde);
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      font-size: 12px;
+      transition: all 0.15s ease;
+    }
+
+    .winget-trigger-btn:hover {
+      border-color: var(--interactive-accent, #b0a84a);
+      color: var(--interactive-accent, #b0a84a);
+      transform: translateY(-1px);
+    }
+
+    .winget-footer-links {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted, #888);
+      border-top: 1px dashed var(--background-modifier-border, #333);
+      padding-top: 12px;
+    }
+
+    .winget-footer-links a {
+      color: var(--interactive-accent, #b0a84a);
+      text-decoration: none;
+    }
+
+    .winget-footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="theme-dark">
+
+  <div class="winget-showcase-shell">
+    <div class="winget-header-row">
+      <h1 class="winget-title">🕹️ Arcade Winget Navigation Pod</h1>
+      <span class="winget-badge">STANDALONE</span>
+    </div>
+
+    <p class="winget-desc">
+      Multimodal rescue navigation pod. Triggerable via mobile 5-finger touch hold (0.5s), typing <code>dowkwkwk</code> on desktop, or pressing the buttons below.
+    </p>
+
+    <div class="winget-action-list">
+      <button type="button" class="winget-trigger-btn" onclick="if(window.ArcadeWinget){window.ArcadeWinget.togglePod();}else{alert('Winget Pod Ready');}">
+        <span style="font-size: 20px;">🕹️</span>
+        <span>Toggle Nav Pod</span>
+      </button>
+
+      <a href="page-apps.html" class="winget-trigger-btn">
+        <span style="font-size: 20px;">💾</span>
+        <span>Return to Apps</span>
+      </a>
+
+      <button type="button" class="winget-trigger-btn" data-action="toggle-fullscreen">
+        <span style="font-size: 20px;">⛶</span>
+        <span>Fullscreen [F11]</span>
+      </button>
+
+      <button type="button" class="winget-trigger-btn" data-action="open-accent-picker">
+        <span style="font-size: 20px;">🎨</span>
+        <span>Accent Picker</span>
+      </button>
+    </div>
+
+    <div class="winget-footer-links">
+      <span>Triggers: 5-touch hold | "dowkwkwk"</span>
+      <a href="page-apps.html">← Back to Catalog</a>
+    </div>
+  </div>
+
+  <!-- Modular Scripts -->
+  <!-- Modular Vintage Architecture Scripts -->
+  <script src="modules/theme-engine.js"></script>
+  <script src="components/accent-picker-modal.js"></script>
+  <script src="modules/winget.js"></script>
+</body>
+</html>

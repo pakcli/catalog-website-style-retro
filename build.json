@@ -1,0 +1,205 @@
+{
+  "$schema": "./build.schema.json",
+  "version": "2.1.0",
+  "project": "vibe-code-arcade",
+  "description": "100% Declarative & Modular Build Manifesto (Zero Hardcoded Variables in PS1)",
+  "paths": {
+    "source": "src",
+    "output": "public",
+    "apps": "apps"
+  },
+  "bundles": {
+    "scripts": [
+      {
+        "output": "page-apps.js",
+        "type": "bundle",
+        "description": "Bundled Catalog Engine (Theme + Accent + Breadcrumb + Router + Markdown + Catalog + Downloader + Slidev + Speech + TTS)",
+        "sources": [
+          "modules/theme-engine.js",
+          "components/accent-picker-modal.js",
+          "modules/breadcrumb.js",
+          "modules/navigation-url.js",
+          "modules/markdown-processor.js",
+          "modules/catalog-core.js",
+          "modules/download-module.js",
+          "modules/slidev-engine.js",
+          "modules/speech-engine.js",
+          "modules/tts.js",
+          "modules/pipeline-optimizer.js",
+          "modules/winget.js"
+        ]
+      },
+      {
+        "output": "page-playground.js",
+        "type": "bundle",
+        "description": "Bundled Dual-Panel Playground Engine (Theme + Accent + Breadcrumb + Router + Markdown + Downloader + Slidev + Speech + TTS + Playground)",
+        "sources": [
+          "modules/theme-engine.js",
+          "components/accent-picker-modal.js",
+          "modules/breadcrumb.js",
+          "modules/navigation-url.js",
+          "modules/markdown-processor.js",
+          "modules/download-module.js",
+          "modules/slidev-engine.js",
+          "modules/speech-engine.js",
+          "modules/tts.js",
+          "modules/pipeline-optimizer.js",
+          "modules/playground.js",
+          "modules/winget.js"
+        ]
+      },
+      {
+        "output": "winget.js",
+        "type": "standalone",
+        "description": "Emergency Floating Quick Nav Pod & Multimodal Gestures",
+        "sources": [
+          "modules/winget.js"
+        ]
+      }
+    ],
+    "styles": [
+      {
+        "output": "theme.css",
+        "source": "style/theme/vintage-computer/theme.css",
+        "description": "Master Obsidian Theme (RULE #1 Safe - 0 Edits)"
+      },
+      {
+        "output": "style.css",
+        "source": "style/flopydisk-cornercut.css",
+        "combine": [
+          "style/flopydisk-cornercut.css",
+          "style/terminal.css",
+          "style/winget.css"
+        ],
+        "description": "Master Vintage Universal Combined Stylesheet"
+      },
+      {
+        "output": "terminal.css",
+        "source": "style/terminal.css",
+        "description": "Terminal Blinking Cursor & Animations"
+      },
+      {
+        "output": "winget.css",
+        "source": "style/winget.css",
+        "description": "Floating Quick Nav Pod & Modal Stylesheet"
+      }
+    ],
+    "html": [
+      {
+        "output": "page-apps.html",
+        "source": "page-apps.html",
+        "description": "Arcade Catalog Hub (Hero Floppy Disk, Sticky Navbar, Rectangular Catalog Cards)",
+        "inject": {
+          "styles": [
+            "style.css",
+            "winget.css",
+            "flopydisk-cornercut.css"
+          ],
+          "scripts": [
+            "page-apps.js"
+          ],
+          "scriptBlockPattern": "(?s)<!-- Modular Vintage Architecture Scripts -->.*?</body>"
+        }
+      },
+      {
+        "output": "page-playground.html",
+        "source": "page-playground.html",
+        "cleanRoutePrefix": "playground",
+        "ttsEngine": "modules/tts.js",
+        "description": "Dual-Panel Interactive Sandbox (Clean URL: /playground/<namatitle> + Pre-Compiled Public TTS)",
+        "inject": {
+          "styles": [
+            "style.css",
+            "winget.css"
+          ],
+          "scripts": [
+            "page-playground.js"
+          ],
+          "scriptBlockPattern": "(?s)<!-- Modular Vintage Architecture Scripts -->.*?</body>"
+        }
+      },
+      {
+        "output": "winget.html",
+        "source": "winget.html",
+        "description": "Emergency Floating Quick Nav Pod standalone showcase",
+        "inject": {
+          "styles": [
+            "style.css",
+            "winget.css"
+          ],
+          "scripts": [
+            "winget.js"
+          ],
+          "scriptBlockPattern": "(?s)<!-- Modular Vintage Architecture Scripts -->.*?</body>"
+        }
+      },
+      {
+        "output": "index.html",
+        "type": "redirect",
+        "target": "page-apps.html",
+        "cleanRoute": "/page-apps",
+        "title": "Vintage Computing Arcade -- Redirecting to Apps...",
+        "banner": "[DRIVE A:\\] LOADING VINTAGE COMPUTING ARCADE...",
+        "description": "Root domain forwarder to page-apps"
+      }
+    ],
+    "cartridges": {
+      "source": "apps",
+      "secondarySource": "apps",
+      "output": "apps",
+      "entryFiles": [
+        {
+          "source": "standalone.html",
+          "extension": ".html"
+        },
+        {
+          "source": "standalone.md",
+          "extension": ".md"
+        }
+      ],
+      "directFilter": "*.*",
+      "description": "Cartridge repository sync"
+    },
+    "media": [
+      {
+        "source": "assets",
+        "output": "assets",
+        "description": "Static media and images pass-through"
+      },
+      {
+        "source": "icons",
+        "output": "icons",
+        "description": "UI SVG and favicon icons pass-through"
+      }
+    ],
+    "screenshots": {
+      "output": "apps",
+      "windowSize": "1280,800",
+      "format": "webp",
+      "quality": 85,
+      "description": "Automated build-time desktop view screenshots via modular Playwright",
+      "targets": [
+        {
+          "id": "radiansincostan",
+          "source": "apps/radiansincostan.html",
+          "output": "radiansincostan.webp"
+        }
+      ]
+    }
+  },
+  "buildMetrics": {
+    "auditCoreCsv": "public/build-report-table-core.csv",
+    "auditDetailedCsv": "public/build-report-table-detailed.csv",
+    "reportMd": "public/build-report.md",
+    "reportFlatMd": "public/build-report-flat.md",
+    "durationMs": 101,
+    "updatedAt": "2026-10-19T11:17:59.659Z",
+    "sizes": {
+      "src": "1016.69 KB",
+      "apps": "323.72 KB",
+      "buildWithoutAppsUncompacted": "1035.63 KB",
+      "buildWithAppsUncompacted": "1565.66 KB",
+      "buildWithAppsCompacted": "1462.19 KB"
+    }
+  }
+}
