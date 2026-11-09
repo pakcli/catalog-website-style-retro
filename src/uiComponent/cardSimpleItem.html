@@ -1,0 +1,41 @@
+<!-- Mode 2: Card Simple Item (3:4 ratio, telemetry in top row with PIN, wide bottom buttons) -->
+<article class="floppy-card card-simple" data-app-slug="{{slug}}" data-tags="{{tagsJoined}}" data-category="{{category}}">
+  <div class="simple-telemetry-row">
+    <div class="telemetry-badges">
+      <span>{{fileSize}}</span>
+      <span class="tele-sep">│</span>
+      <span>{{loc}} LOC</span>
+      <span class="tele-sep">│</span>
+      <span>{{tokens}}</span>
+    </div>
+    <button class="pin-btn" data-pin-target="{{slug}}" title="Pin Cartridge" aria-label="Pin Cartridge">
+      <span class="pin-icon">☆</span>
+    </button>
+  </div>
+
+  <div class="media-slot-16-9 media-compact">
+    <div class="screen-preview-slot">
+      <img src="{{previewSrc}}" alt="{{title}}" class="thumb-img" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+      <div class="launch-prompt">▶</div>
+    </div>
+  </div>
+
+  <div class="card-content-body">
+    <h3 class="card-title">{{title}}</h3>
+    <p class="card-purpose">{{purpose}}</p>
+  </div>
+
+  <div class="card-actions-simple">
+    <a href="{{playgroundUrl}}" class="btn-primary-action btn-full" title="Open in Playground">
+      <span>&gt;_ Open in Playground</span>
+    </a>
+    <div class="simple-action-pair">
+      <a href="{{downloadUrl}}" download class="btn-wide-dl" title="Download">
+        <span>⬇ Download</span>
+      </a>
+      <a href="{{standaloneUrl}}" target="_blank" rel="noopener noreferrer" class="btn-icon-ext" title="External Standalone">
+        <span>↗</span>
+      </a>
+    </div>
+  </div>
+</article>

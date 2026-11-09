@@ -1,0 +1,28 @@
+{
+  "slug": "plumbing-arcitecture-inventory",
+  "id": "plumbing-arcitecture-inventory",
+  "title": "Plumbing Architecture & Inventory",
+  "sector": "tools",
+  "category": "TOOLS & UTILITY",
+  "scope": [
+    "tools"
+  ],
+  "fileSize": "22.5 KB",
+  "tags": [
+    "Plumbing",
+    "Architecture",
+    "BOM Calculator",
+    "Zero-Backend"
+  ],
+  "overview": "Interactive plumbing architecture, flow topology, part inventory, and automated procurement Bill of Materials (BOM) engine.",
+  "badge": "v2.5",
+  "img": "apps/plumbing-arcitecture-inventory/img.webp",
+  "thumbnail": "apps/plumbing-arcitecture-inventory/img.webp",
+  "imgLight": "apps/plumbing-arcitecture-inventory/img-lightmode.webp",
+  "imgDark": "apps/plumbing-arcitecture-inventory/img-darkmode.webp",
+  "obsidianImgProperty": "[[img-lightmode.webp]], [[img-darkmode.webp]]",
+  "linkLive": "apps/plumbing-arcitecture-inventory/index.html",
+  "linkSubpage": "page-playground.html?app=plumbing-arcitecture-inventory",
+  "linkPlayground": "apps/plumbing-arcitecture-inventory/index_playground.html",
+  "linkGithub": "https://github.com/pakcli/retro-template-catalog-website"
+}

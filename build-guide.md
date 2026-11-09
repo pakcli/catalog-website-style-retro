@@ -1,6 +1,6 @@
 # 🕹️ Build Runner Guide (`build.ps1`)
 
-Panduan komprehensif untuk menjalankan, mengonfigurasi, dan mengotomasi pipeline kompilasi standalone **Retro Template Catalog Website** menggunakan script [build.ps1](file:///d:/0pro/fadhlisl-my-id/build.ps1).
+Panduan komprehensif untuk menjalankan, mengonfigurasi, dan mengotomasi pipeline kompilasi standalone **Retro Template Catalog Website** menggunakan script [build.ps1](build.ps1).
 
 ---
 
@@ -21,7 +21,7 @@ Panduan komprehensif untuk menjalankan, mengonfigurasi, dan mengotomasi pipeline
 
 ## 1. Ringkasan Eksekutif
 
-[build.ps1](file:///d:/0pro/fadhlisl-my-id/build.ps1) adalah interactive runner PowerShell yang dirancang agar siapapun yang men-clone atau mem-fork repositori ini dapat mengompilasi seluruh web catalog tanpa perlu menghafal perintah CLI yang rumit.
+[build.ps1](build.ps1) adalah interactive runner PowerShell yang dirancang agar siapapun yang men-clone atau mem-fork repositori ini dapat mengompilasi seluruh web catalog tanpa perlu menghafal perintah CLI yang rumit.
 
 Script ini:
 - **Zero-Baggage**: Hanya memasang modul yang benar-benar dibutuhkan (`playwright` untuk auto-screenshot desktop preview).
@@ -56,7 +56,7 @@ Saat kamu menjalankan `.\build.ps1`, script akan mengeksekusi tahapan terstruktu
 ### 2️⃣ Tahap 2: Pengecekan Modul Esensial (Playwright Only)
 - Memeriksa apakah folder `node_modules/playwright` sudah terpasang.
 - Jika belum ada, script secara otomatis menjalankan `npm install`.
-- Karena [package.json](file:///d:/0pro/fadhlisl-my-id/package.json) hanya berisi `playwright`, maka hanya package tersebut yang dipasang tanpa bloatware tambahan.
+- Karena [package.json](package.json) hanya berisi `playwright`, maka hanya package tersebut yang dipasang tanpa bloatware tambahan.
 
 ### 3️⃣ Tahap 3: Pengecekan & Guided Setup Konfigurasi (`build-config.yaml`)
 - Script mendeteksi apakah `build-config.yaml` belum ada, atau masih berisi nilai placeholder template (seperti `YOUR-URL-DOMAIN.COM HERE`).
@@ -68,11 +68,11 @@ Saat kamu menjalankan `.\build.ps1`, script akan mengeksekusi tahapan terstruktu
 ### 4️⃣ Tahap 4: Pemilihan Lokasi Folder Cartridge (`apps/`)
 - Menanyakan kepada pengguna: *"Where are your cartridge apps located?"*.
 - Default: `./apps` (bisa langsung menekan tombol **ENTER**).
-- Menerima path relatif maupun absolute (misal: `../koleksi-game` atau `D:\pro\apps`).
+- Menerima path relatif di dalam workspace root (misal: `./apps` atau `../koleksi-game`).
 - Jika folder belum ada, script otomatis membuatkannya.
 
 ### 5️⃣ Tahap 5: Kompilasi & Kompaksi Standalone
-- Menjalankan core compiler engine [src/modules/build-bundle.js](file:///d:/0pro/fadhlisl-my-id/src/modules/build-bundle.js) dengan flag `--apps=<folder>`.
+- Menjalankan core compiler engine [src/modules/build-bundle.js](src/modules/build-bundle.js) dengan flag `--apps=<folder>`.
 - Menghasilkan 3 bundle JS client, menggabungkan stylesheet, dan menyinkronkan catalog `_catalog.json`.
 - Menampilkan opsi membuka preview server lokal (`http://localhost:8080`).
 
@@ -80,7 +80,7 @@ Saat kamu menjalankan `.\build.ps1`, script akan mengeksekusi tahapan terstruktu
 
 ## 3. Parameter & Flag CLI
 
-Untuk penggunaan tingkat lanjut atau otomasi script, [build.ps1](file:///d:/0pro/fadhlisl-my-id/build.ps1) mendukung parameter berikut:
+Untuk penggunaan tingkat lanjut atau otomasi script, [build.ps1](build.ps1) mendukung parameter berikut:
 
 | Parameter | Tipe | Default | Deskripsi |
 | :--- | :---: | :---: | :--- |
@@ -96,19 +96,19 @@ Untuk penggunaan tingkat lanjut atau otomasi script, [build.ps1](file:///d:/0pro
 Ini adalah alur paling umum untuk penggunaan sehari-hari:
 
 ```powershell
-PS D:\0pro\fadhlisl-my-id> .\build.ps1
+PS ./retro-template-catalog-website> .\build.ps1
 
 ======================================================================
   🕹️  RETRO TEMPLATE CATALOG WEBSITE -- BUILD RUNNER
 ======================================================================
-Directory : D:\0pro\fadhlisl-my-id
+Directory : ./retro-template-catalog-website
 
 [1/4] Checking Node.js runtime... [OK] (v20.18.0)
 [2/4] Checking required dependencies... [OK] (Playwright ready)
 [3/4] Resolving Cartridge Directory (apps/)...
       Where are your cartridge apps located?
       [Default: apps (Press ENTER) or enter custom path]: 
-      -> Target Apps Directory: D:\0pro\fadhlisl-my-id\apps
+      -> Target Apps Directory: ./retro-template-catalog-website/apps
 
 [4/4] Executing compiler engine (src/modules/build-bundle.js)...
 ----------------------------------------------------------------------
@@ -121,9 +121,9 @@ Directory : D:\0pro\fadhlisl-my-id
 ======================================================================
   ✨ BUILD COMPLETE! Compiled distribution ready in ./public
 ======================================================================
-  Live Output : D:\0pro\fadhlisl-my-id\public\index.html
-  Apps Catalog: D:\0pro\fadhlisl-my-id\public\page-apps.html
-  Playground  : D:\0pro\fadhlisl-my-id\public\page-playground.html
+  Live Output : ./public/index.html
+  Apps Catalog: ./public/page-apps.html
+  Playground  : ./public/page-playground.html
 
 Start local preview server now? (y/N): n
 ```
@@ -131,15 +131,15 @@ Start local preview server now? (y/N): n
 ---
 
 ### Contoh B: Memilih Folder Cartridge Custom
-Jika kamu memiliki folder cartridge di lokasi terpisah (misalnya di luar repo):
+Jika kamu memiliki folder cartridge di lokasi sibling di dalam workspace root:
 
 ```powershell
-PS D:\0pro\fadhlisl-my-id> .\build.ps1
+PS ./retro-template-catalog-website> .\build.ps1
 
 [3/4] Resolving Cartridge Directory (apps/)...
       Where are your cartridge apps located?
-      [Default: apps (Press ENTER) or enter custom path]: D:\my-cartridges\retro-games
-      -> Target Apps Directory: D:\my-cartridges\retro-games
+      [Default: apps (Press ENTER) or enter custom path]: ../my-cartridges/retro-games
+      -> Target Apps Directory: ../my-cartridges/retro-games
 ```
 > Compiler akan langsung membaca semua file `index.md`, `index.html`, dan thumbnail WebP dari direktori tersebut dan mengompilasinya ke `public/apps/`!
 
@@ -219,7 +219,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 ### Q2: Apakah saya harus menjalankan `npm install` manual terlebih dahulu?
-**Jawaban**: **Tidak perlu.** [build.ps1](file:///d:/0pro/fadhlisl-my-id/build.ps1) akan otomatis mengecek keberadaan `node_modules` pada Tahap 2 dan memasang Playwright secara otomatis jika belum ada.
+**Jawaban**: **Tidak perlu.** [build.ps1](build.ps1) akan otomatis mengecek keberadaan `node_modules` pada Tahap 2 dan memasang Playwright secara otomatis jika belum ada.
 
 ### Q3: Bagaimana cara deploy ke GitHub Pages?
-**Jawaban**: Repositori ini sudah dilengkapi alur otomatis [.github/workflows/deploy.yml](file:///d:/0pro/fadhlisl-my-id/.github/workflows/deploy.yml). Saat kamu melakukan push ke GitHub, workflow akan otomatis menjalankan proses build dan mempublikasikan folder `public/` ke GitHub Pages secara gratis!
+**Jawaban**: Repositori ini sudah dilengkapi alur otomatis [.github/workflows/deploy.yml](.github/workflows/deploy.yml). Saat kamu melakukan push ke GitHub, workflow akan otomatis menjalankan proses build dan mempublikasikan folder `public/` ke GitHub Pages secara gratis!

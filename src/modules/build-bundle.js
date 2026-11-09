@@ -98,7 +98,7 @@ function loadBuildConfig() {
 
 const buildConfigData = loadBuildConfig();
 
-const targetAppsSource = cliAppsDir || process.env.ARCADE_APPS_DIR || buildConfigData.paths.apps || 'apps';
+const targetAppsSource = fs.existsSync(path.join(repoRoot, 'data/apps')) ? 'data/apps' : (cliAppsDir || process.env.ARCADE_APPS_DIR || buildConfigData.paths.apps || 'apps');
 const appsDir = path.isAbsolute(targetAppsSource) ? targetAppsSource : path.resolve(repoRoot, targetAppsSource);
 const publicDir = path.resolve(repoRoot, buildConfigData.paths.output || 'public');
 const publicAppsDir = path.join(publicDir, 'apps');
@@ -144,11 +144,8 @@ function recordAuditEntry(fileName, srcDisplay, beforeBytes, afterBytes, isMerge
 // COMPACTION ENGINES (Zero-dependency JavaScript, CSS, and HTML minifiers)
 // -----------------------------------------------------------------------------
 function compactJs(rawJs) {
-  return rawJs
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^[ \t]*\/\/.*$/gm, '')
-    .replace(/(\r?\n\s*){2,}/g, '\n')
-    .trim();
+  // Safe JS preservation: prevents breaking regex literals and codeblocks
+  return rawJs.trim();
 }
 
 function compactCss(rawCss) {
@@ -242,7 +239,7 @@ function parseYamlFrontmatter(content, slug) {
   return {
     slug: slug,
     id: slug,
-    title: data.title || (slug.charAt(0).toUpperCase() + slug.slice(1)),
+    title: (data.title || (slug.charAt(0).toUpperCase() + slug.slice(1))).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu, '').trim(),
     sector: sector,
     category: data.category || meta.badge,
     scope: Array.isArray(data.scope) ? data.scope : [sector],
@@ -451,191 +448,763 @@ console.log(`  ★ Generated public/apps/_catalog.json and synced apps/_catalog.
 // -----------------------------------------------------------------------------
 // STEP 2: COMPILE 3 JS BUNDLES FROM src/modules/
 // -----------------------------------------------------------------------------
-console.log('[2/5] Compiling 3 Client JS Bundles...');
+console.log('[2/5] Compiling Client main.js Bundle (Clean Architecture)...');
 
-const bundle1Sources = [
-  'modules/theme-engine.js',
-  'components/accent-picker-modal.js',
-  'modules/breadcrumb.js',
-  'modules/navigation-url.js',
-  'modules/markdown-processor.js',
-  'modules/catalog-core.js',
-  'modules/download-module.js',
-  'modules/slidev-engine.js',
-  'modules/speech-engine.js',
-  'modules/tts.js',
-  'modules/pipeline-optimizer.js',
-  'modules/winget.js'
-];
+// Read modular source modules
+const routerJs = fs.readFileSync(path.join(modulesDir, 'router.js'), 'utf8');
+const searchEngineJs = fs.readFileSync(path.join(modulesDir, 'searchEngine.js'), 'utf8');
+const preferencesStoreJs = fs.readFileSync(path.join(modulesDir, 'preferencesStore.js'), 'utf8');
+const telemetryCalculatorJs = fs.readFileSync(path.join(modulesDir, 'telemetryCalculator.js'), 'utf8');
+const standaloneCompilerJs = fs.readFileSync(path.join(modulesDir, 'standaloneCompiler.js'), 'utf8');
+const keyboardShortcutsJs = fs.readFileSync(path.join(modulesDir, 'keyboardShortcuts.js'), 'utf8');
+const clipboardToastJs = fs.readFileSync(path.join(modulesDir, 'clipboardToast.js'), 'utf8');
+const drawerControllerJs = fs.readFileSync(path.join(modulesDir, 'drawerController.js'), 'utf8');
 
-const bundle2Sources = [
-  'modules/theme-engine.js',
-  'components/accent-picker-modal.js',
-  'modules/breadcrumb.js',
-  'modules/navigation-url.js',
-  'modules/markdown-processor.js',
-  'modules/download-module.js',
-  'modules/slidev-engine.js',
-  'modules/speech-engine.js',
-  'modules/tts.js',
-  'modules/pipeline-optimizer.js',
-  'modules/playground.js',
-  'modules/winget.js'
-];
+// Aggregate Omni-Catalog across all 4 subsystems
+const omniCatalogEntries = [];
+['apps', 'skills', 'combos', 'scripts'].forEach(subDir => {
+  const catPath = path.join(repoRoot, 'data', subDir, '_catalog.json');
+  if (fs.existsSync(catPath)) {
+    try {
+      const items = JSON.parse(fs.readFileSync(catPath, 'utf8'));
+      const emojiStripRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}]/gu;
+      items.forEach(it => {
+        const cleanTitle = (it.title || it.slug).replace(emojiStripRegex, '').trim();
+        omniCatalogEntries.push({
+          id: it.slug || it.id,
+          title: cleanTitle,
+          displayTitle: cleanTitle,
+          subsystem: subDir,
+          subsystemIcon: '',
+          category: it.category || subDir.toUpperCase(),
+          size: it.fileSize || '3.5 KB',
+          tags: it.tags || [],
+          overview: (it.overview || '').replace(emojiStripRegex, '').trim(),
+          url: it.linkLive || (subDir + '/')
+        });
+      });
+    } catch (_) {}
+  }
+});
 
-const bundle3Sources = [
-  'modules/theme-engine.js',
-  'components/accent-picker-modal.js',
-  'modules/winget.js'
-];
+const clientMainJs = `// =============================================================================
+// MAIN CATALOG CONTROLLER (Master Clean Architecture Client Engine)
+// =============================================================================
+(function () {
+  'use strict';
 
-function concatFiles(fileList) {
-  return fileList.map(relPath => {
-    const fullPath = path.join(srcDir, relPath);
-    if (!fs.existsSync(fullPath)) return `/* Missing: ${relPath} */`;
-    return `// ==========================================\n// MODULE: ${relPath}\n// ==========================================\n${fs.readFileSync(fullPath, 'utf8')}\n`;
-  }).join('\n;\n');
-}
+  const STORAGE_KEY_PINNED = 'arcade_pinned_disks';
 
-const rawPageAppsJs = concatFiles(bundle1Sources);
-const rawPagePlaygroundJs = concatFiles(bundle2Sources);
-const rawWingetJs = concatFiles(bundle3Sources);
+  // 2. Clock in WIB
+  function updateWibClock() {
+    const el = document.getElementById('heroWibClockVal');
+    if (!el) return;
+    try {
+      const now = new Date();
+      const options = { timeZone: 'Asia/Jakarta', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      el.textContent = now.toLocaleTimeString('en-GB', options) + ' WIB';
+    } catch (_) {}
+  }
+  updateWibClock();
+  setInterval(updateWibClock, 1000);
 
-const compactedPageAppsJs = compactJs(rawPageAppsJs);
-const compactedPagePlaygroundJs = compactJs(rawPagePlaygroundJs);
-const compactedWingetJs = compactJs(rawWingetJs);
+  // 3. Category & Pin Filter State
+  let activeScope = 'all';
+  let pinOnly = false;
+  let activeQuery = '';
 
-fs.writeFileSync(path.join(publicDir, 'page-apps.js'), compactedPageAppsJs, 'utf8');
-fs.writeFileSync(path.join(publicDir, 'page-playground.js'), compactedPagePlaygroundJs, 'utf8');
-fs.writeFileSync(path.join(publicDir, 'winget.js'), compactedWingetJs, 'utf8');
+  function getPinnedList() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_PINNED) || '[]');
+    } catch (_) {
+      return [];
+    }
+  }
 
-fs.writeFileSync(path.join(srcDir, 'page-apps.js'), rawPageAppsJs, 'utf8');
-fs.writeFileSync(path.join(srcDir, 'page-playground.js'), rawPagePlaygroundJs, 'utf8');
-fs.writeFileSync(path.join(srcDir, 'winget.js'), rawWingetJs, 'utf8');
+  function setPinnedList(list) {
+    localStorage.setItem(STORAGE_KEY_PINNED, JSON.stringify(list));
+  }
 
-recordAuditEntry('page-apps.js', `${(Buffer.byteLength(rawPageAppsJs) / 1024).toFixed(2)} KB (bundle)`, Buffer.byteLength(rawPageAppsJs), Buffer.byteLength(compactedPageAppsJs), true);
-recordAuditEntry('page-playground.js', `${(Buffer.byteLength(rawPagePlaygroundJs) / 1024).toFixed(2)} KB (bundle)`, Buffer.byteLength(rawPagePlaygroundJs), Buffer.byteLength(compactedPagePlaygroundJs), true);
-recordAuditEntry('winget.js', `${(Buffer.byteLength(rawWingetJs) / 1024).toFixed(2)} KB`, Buffer.byteLength(rawWingetJs), Buffer.byteLength(compactedWingetJs), false);
+  function updateCards() {
+    const cards = document.querySelectorAll('.app-cards-grid article.floppy-card, .bases-cards-item');
+    const pinned = getPinnedList();
+    let visibleCount = 0;
+    const totalCount = cards.length;
 
-console.log('  -> public/page-apps.js (' + (Buffer.byteLength(compactedPageAppsJs) / 1024).toFixed(1) + ' KB)');
-console.log('  -> public/page-playground.js (' + (Buffer.byteLength(compactedPagePlaygroundJs) / 1024).toFixed(1) + ' KB)');
-console.log('  -> public/winget.js (' + (Buffer.byteLength(compactedWingetJs) / 1024).toFixed(1) + ' KB)\n');
+    cards.forEach(card => {
+      const app = card.getAttribute('data-app') || card.getAttribute('data-app-slug') || '';
+      const scope = (card.getAttribute('data-scope') || card.getAttribute('data-category') || '').toLowerCase();
+      const name = (card.getAttribute('data-name') || card.querySelector('.floppy-title, .card-title')?.textContent || '').toLowerCase();
+      const isPinned = pinned.includes(app);
+
+      // Pin button visual state
+      const pinBtn = card.querySelector('.floppy-pin-btn, .pin-btn');
+      if (pinBtn) {
+        pinBtn.classList.toggle('is-pinned', isPinned);
+        const icon = pinBtn.querySelector('.pin-icon');
+        if (icon) icon.textContent = isPinned ? '★' : '📌';
+      }
+
+      // Filter logic
+      const matchesScope = (activeScope === 'all') || scope.includes(activeScope);
+      const matchesPin = !pinOnly || isPinned;
+      const matchesQuery = !activeQuery || name.includes(activeQuery) || app.includes(activeQuery) || scope.includes(activeQuery);
+
+      if (matchesScope && matchesPin && matchesQuery) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    const badge = document.getElementById('diskCounterBadge');
+    if (badge) {
+      badge.textContent = '💾 ' + visibleCount + '/' + totalCount;
+    }
+    const heroLoaded = document.getElementById('heroAppsLoadedVal');
+    if (heroLoaded && document.body.getAttribute('data-page') !== 'home') {
+      heroLoaded.textContent = totalCount + ' Disks';
+    }
+  }
+
+  // 4. Tab Listeners
+  document.querySelectorAll('.workspace-tab-header').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.workspace-tab-header').forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      activeScope = (btn.getAttribute('data-scope') || 'all').toLowerCase();
+      updateCards();
+    });
+  });
+
+  // 5. Pin Only Toggle
+  const pinToggleBtn = document.getElementById('pinOnlyToggleBtn');
+  if (pinToggleBtn) {
+    pinToggleBtn.addEventListener('click', () => {
+      pinOnly = !pinOnly;
+      pinToggleBtn.classList.toggle('is-active', pinOnly);
+      updateCards();
+    });
+  }
+
+  // 6. Card Pin Action
+  document.addEventListener('click', (e) => {
+    const pinBtn = e.target.closest('.floppy-pin-btn, .pin-btn');
+    if (!pinBtn) return;
+    const target = pinBtn.getAttribute('data-pin-target');
+    if (!target) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    let pinned = getPinnedList();
+    if (pinned.includes(target)) {
+      pinned = pinned.filter(x => x !== target);
+    } else {
+      pinned.push(target);
+    }
+    setPinnedList(pinned);
+    updateCards();
+  });
+
+  // 7. View Mode Switcher (Simple Card | Detail Card | List Table)
+  const STORAGE_KEY_VIEW_MODE = 'arcade_catalog_view_mode';
+  const btnViewSimple = document.getElementById('btnViewSimple') || document.getElementById('gridViewBtn');
+  const btnViewDetail = document.getElementById('btnViewDetail') || document.getElementById('detailViewBtn');
+  const btnViewTable = document.getElementById('btnViewTable');
+  const appsGrid = document.getElementById('appsGrid');
+
+  function applyViewMode(mode) {
+    if (!appsGrid) return;
+    appsGrid.classList.remove('view-simple', 'view-detail', 'view-table', 'mobile-view-grid', 'mobile-view-detail');
+    
+    if (btnViewSimple) btnViewSimple.classList.toggle('is-active', mode === 'simple');
+    if (btnViewDetail) btnViewDetail.classList.toggle('is-active', mode === 'detail');
+    if (btnViewTable) btnViewTable.classList.toggle('is-active', mode === 'table');
+
+    if (mode === 'detail') {
+      appsGrid.classList.add('view-detail', 'mobile-view-detail');
+    } else if (mode === 'table') {
+      appsGrid.classList.add('view-table');
+    } else {
+      appsGrid.classList.add('view-simple', 'mobile-view-grid');
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY_VIEW_MODE, mode);
+    } catch (_) {}
+  }
+
+  if (appsGrid) {
+    const savedMode = localStorage.getItem(STORAGE_KEY_VIEW_MODE) || 'simple';
+    applyViewMode(savedMode);
+
+    if (btnViewSimple) btnViewSimple.addEventListener('click', () => applyViewMode('simple'));
+    if (btnViewDetail) btnViewDetail.addEventListener('click', () => applyViewMode('detail'));
+    if (btnViewTable) btnViewTable.addEventListener('click', () => applyViewMode('table'));
+  }
+
+  // 8. INTERACTIVE CLI PROMPT & OMNI-SUGGESTIONS ENGINE
+  const searchInput = document.getElementById('topSearchInput');
+  const typedText = document.getElementById('terminalTypedText');
+  const suggestionBox = document.getElementById('suggestionBox');
+  const promptFolder = document.getElementById('promptFolderSegment');
+  const promptCaret = document.getElementById('promptTerminalCaret');
+
+  const omniData = (typeof window !== 'undefined' && window.__ARCADE_OMNI_CATALOG__) || [];
+
+  const isHome = document.body && document.body.getAttribute('data-page') === 'home';
+  const currentSubsystem = isHome ? 'home' : (promptFolder ? (promptFolder.textContent || '').trim().toLowerCase() : 'apps');
+  const relPrefix = isHome ? '' : '../';
+
+  const NAV_DESTINATIONS = [
+    { key: 'apps', name: 'apps', label: 'apps/ - Standalone Web Cartridges', path: relPrefix + 'apps/', badge: 'NAV', meta: 'Cartridges' },
+    { key: 'skills', name: 'skills', label: 'skills/ - Modular Agent Directives', path: relPrefix + 'skills/', badge: 'NAV', meta: 'Directives' },
+    { key: 'combos', name: 'combos', label: 'combos/ - Workflow Pipelines', path: relPrefix + 'combos/', badge: 'NAV', meta: 'Pipelines' },
+    { key: 'scripts', name: 'scripts', label: 'scripts/ - Context Ops & CLI Automations', path: relPrefix + 'scripts/', badge: 'NAV', meta: 'Automations' },
+    { key: 'home', name: 'home', label: 'home/ - Retro Arcade Master Hub', path: relPrefix + 'index.html', badge: 'NAV', meta: 'Hub' }
+  ];
+
+  let selectedSuggestionIndex = -1;
+  let currentSuggestions = [];
+  let isBackspacedMode = false;
+
+  function highlightMatches(text, query) {
+    if (!query) return text;
+    const idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return text;
+    return text.slice(0, idx) + '<span class="suggestion-highlight">' + text.slice(idx, idx + query.length) + '</span>' + text.slice(idx + query.length);
+  }
+
+  function renderSuggestions(list, query) {
+    currentSuggestions = list;
+    selectedSuggestionIndex = -1;
+    if (!suggestionBox) return;
+
+    if (!list || list.length === 0) {
+      suggestionBox.style.display = 'none';
+      suggestionBox.innerHTML = '';
+      return;
+    }
+
+    let html = '<div class="suggestion-list">';
+    list.forEach((item, idx) => {
+      const isNav = !!item.isNav;
+      const badgeClass = isNav ? 'badge-nav' : ('badge-' + (item.subsystem || 'app'));
+      const badgeText = item.badge || (item.subsystem ? item.subsystem.slice(0, 4).toUpperCase() : 'APP');
+      const title = item.displayTitle || item.label || item.title || item.name;
+      const metaText = item.meta || item.size || item.category || '';
+
+      html += '<div class="suggestion-item" data-index="' + idx + '" data-url="' + (item.path || item.url || '') + '">' +
+        '<div class="suggestion-left">' +
+          '<span class="suggestion-badge ' + badgeClass + '">' + badgeText + '</span>' +
+          '<span class="suggestion-title">' + highlightMatches(title, query) + '</span>' +
+        '</div>' +
+        '<div class="suggestion-meta">' +
+          '<span class="size-pill">' + metaText + '</span>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    html += '<div class="suggestion-footer">' +
+      '<span>[↑↓] Navigate</span>' +
+      '<span>[ENTER] Select / Open</span>' +
+      '<span>[TAB] Complete</span>' +
+      '<span>[ESC] Close</span>' +
+    '</div>';
+
+    suggestionBox.innerHTML = html;
+    suggestionBox.style.display = 'block';
+
+    suggestionBox.querySelectorAll('.suggestion-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.getAttribute('data-index'), 10);
+        executeSuggestion(currentSuggestions[idx]);
+      });
+    });
+  }
+
+  function executeSuggestion(item) {
+    if (!item) return;
+    if (item.isNav && item.path) {
+      window.location.href = item.path;
+      return;
+    }
+    if (item.url) {
+      if (item.subsystem === currentSubsystem) {
+        activeQuery = (item.title || item.id || '').toLowerCase();
+        if (searchInput) searchInput.value = item.title || item.id;
+        if (typedText) typedText.textContent = item.title || item.id;
+        canonicalizePrompt();
+        updateCards();
+      } else {
+        const targetUrl = relPrefix + item.url;
+        window.location.href = targetUrl;
+      }
+    }
+  }
+
+  function canonicalizePrompt() {
+    isBackspacedMode = false;
+    if (promptFolder) promptFolder.style.display = '';
+    if (promptCaret) {
+      promptCaret.style.display = '';
+      promptCaret.textContent = '>';
+    }
+    if (suggestionBox) {
+      suggestionBox.style.display = 'none';
+      suggestionBox.innerHTML = '';
+    }
+  }
+
+  function handleQuery(raw) {
+    const val = raw.trim();
+    if (!val) {
+      renderSuggestions([], '');
+      activeQuery = '';
+      updateCards();
+      return;
+    }
+
+    let targetSubsystem = '';
+    let searchQuery = val;
+    let delim = val.includes('/') ? '/' : (val.includes('>') ? '>' : null);
+    if (delim) {
+      const parts = val.split(delim);
+      const possibleSub = parts[0].trim().toLowerCase();
+      if (['apps', 'skills', 'combos', 'scripts', 'home'].includes(possibleSub)) {
+        targetSubsystem = possibleSub;
+        searchQuery = parts.slice(1).join(delim).trim();
+      }
+    }
+
+    const suggestions = [];
+
+    // 1. Subsystem navigation quick jump (or typing "/" alone)
+    if (val === '/' || val === '>' || isBackspacedMode || (!delim && ['app', 'apps', 'skill', 'skills', 'combo', 'combos', 'script', 'scripts', 'home'].some(s => s.startsWith(val.toLowerCase())))) {
+      const qLower = val === '/' || val === '>' ? '' : val.toLowerCase();
+      NAV_DESTINATIONS.forEach(dest => {
+        if (!qLower || dest.key.startsWith(qLower) || dest.name.startsWith(qLower)) {
+          suggestions.push({
+            isNav: true,
+            badge: 'NAV',
+            label: dest.label,
+            path: dest.path,
+            meta: dest.meta
+          });
+        }
+      });
+    }
+
+    // 2. Right after "/" or ">" with empty search query (e.g. "apps/", "skills/", "combos/", "scripts/")
+    const searchTarget = searchQuery.toLowerCase();
+    if (targetSubsystem && searchTarget.length === 0) {
+      omniData.forEach(item => {
+        if (item.subsystem === targetSubsystem) {
+          suggestions.push({
+            isNav: false,
+            badge: item.subsystem ? item.subsystem.slice(0, 4).toUpperCase() : 'APP',
+            subsystem: item.subsystem,
+            displayTitle: item.displayTitle || item.title,
+            title: item.title,
+            id: item.id,
+            meta: item.category + ' • ' + item.size,
+            url: item.url
+          });
+        }
+      });
+    }
+
+    // 3. Cross-Subsystem Item Matching ("atitlefromaskillorapp")
+    if (searchTarget.length > 0) {
+      omniData.forEach(item => {
+        if (targetSubsystem && item.subsystem !== targetSubsystem) return;
+        const title = (item.title || item.displayTitle || '').toLowerCase();
+        const overview = (item.overview || '').toLowerCase();
+        const tags = Array.isArray(item.tags) ? item.tags.map(t => t.toLowerCase()) : [];
+        const id = (item.id || item.slug || '').toLowerCase();
+
+        if (title.includes(searchTarget) || id.includes(searchTarget) || overview.includes(searchTarget) || tags.some(t => t.includes(searchTarget))) {
+          suggestions.push({
+            isNav: false,
+            badge: item.subsystem ? item.subsystem.slice(0, 4).toUpperCase() : 'APP',
+            subsystem: item.subsystem,
+            displayTitle: item.displayTitle || item.title,
+            title: item.title,
+            id: item.id,
+            meta: item.category + ' • ' + item.size,
+            url: item.url
+          });
+        }
+      });
+    }
+
+    renderSuggestions(suggestions.slice(0, 8), searchQuery);
+
+    if (!targetSubsystem || targetSubsystem === currentSubsystem) {
+      activeQuery = searchQuery.toLowerCase();
+      updateCards();
+    }
+  }
+
+  function updateSelectedSuggestion() {
+    if (!suggestionBox) return;
+    const items = suggestionBox.querySelectorAll('.suggestion-item');
+    items.forEach((el, idx) => {
+      if (idx === selectedSuggestionIndex) {
+        el.classList.add('is-selected');
+        el.scrollIntoView({ block: 'nearest' });
+      } else {
+        el.classList.remove('is-selected');
+      }
+    });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const raw = e.target.value;
+      if (typedText) typedText.textContent = raw;
+      handleQuery(raw);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        const atStart = searchInput.selectionStart === 0 && searchInput.selectionEnd === 0;
+        if (!isBackspacedMode && (searchInput.value === '' || atStart)) {
+          e.preventDefault();
+          isBackspacedMode = true;
+          if (promptFolder) promptFolder.style.display = 'none';
+          if (promptCaret) promptCaret.style.display = 'none';
+          const curFolder = currentSubsystem === 'home' ? '' : currentSubsystem;
+          const backspaced = curFolder.length > 0 ? curFolder.slice(0, -1) : '';
+          searchInput.value = backspaced;
+          if (typedText) typedText.textContent = backspaced;
+          handleQuery(backspaced);
+          return;
+        }
+      }
+
+      if (currentSuggestions.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedSuggestionIndex = (selectedSuggestionIndex + 1) % currentSuggestions.length;
+          updateSelectedSuggestion();
+          return;
+        }
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedSuggestionIndex = (selectedSuggestionIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+          updateSelectedSuggestion();
+          return;
+        }
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          if (selectedSuggestionIndex >= 0 && currentSuggestions[selectedSuggestionIndex]) {
+            const item = currentSuggestions[selectedSuggestionIndex];
+            const fillText = item.isNav ? (item.key || item.name) : (item.displayTitle || item.title);
+            searchInput.value = fillText;
+            if (typedText) typedText.textContent = fillText;
+            handleQuery(fillText);
+          }
+          return;
+        }
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0 && currentSuggestions[selectedSuggestionIndex]) {
+          executeSuggestion(currentSuggestions[selectedSuggestionIndex]);
+          return;
+        }
+        const raw = searchInput.value.trim();
+        const navMatch = NAV_DESTINATIONS.find(d => d.key === raw.toLowerCase() || d.name === raw.toLowerCase());
+        if (navMatch) {
+          window.location.href = navMatch.path;
+          return;
+        }
+        let delim = raw.includes('/') ? '/' : (raw.includes('>') ? '>' : null);
+        if (delim) {
+          const parts = raw.split(delim);
+          const sub = parts[0].trim().toLowerCase();
+          const q = parts.slice(1).join(delim).trim();
+          if (sub !== currentSubsystem && ['apps', 'skills', 'combos', 'scripts', 'home'].includes(sub)) {
+            const dest = NAV_DESTINATIONS.find(d => d.key === sub);
+            if (dest) {
+              window.location.href = dest.path + (q ? '?q=' + encodeURIComponent(q) : '');
+              return;
+            }
+          }
+          searchInput.value = q;
+          if (typedText) typedText.textContent = q;
+          activeQuery = q.toLowerCase();
+          canonicalizePrompt();
+          updateCards();
+          return;
+        }
+
+        canonicalizePrompt();
+      }
+
+      if (e.key === 'Escape') {
+        canonicalizePrompt();
+        searchInput.blur();
+      }
+    });
+
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!suggestionBox || !suggestionBox.matches(':hover')) {
+          canonicalizePrompt();
+        }
+      }, 200);
+    });
+
+    const searchBtn = document.getElementById('searchActionBtn');
+    if (searchBtn) {
+      searchBtn.addEventListener('click', () => {
+        searchInput.focus();
+      });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const qParam = urlParams.get('q');
+    if (qParam) {
+      searchInput.value = qParam;
+      if (typedText) typedText.textContent = qParam;
+      activeQuery = qParam.toLowerCase();
+      updateCards();
+    }
+  }
+
+  // 9-10. Theme toggle + accent picker are handled by themeEngine.js / accentPickerModal.js (legacy UI preserved)
+
+  // 11. Fullscreen Toggle
+  document.querySelectorAll('[data-action="toggle-fullscreen"]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+  });
+
+  // 12. 4-Tier URL Router Parameter Parsing
+  const fullSearch = window.location.href;
+  if (fullSearch.includes('=?playground') || fullSearch.includes('?app=')) {
+    let appSlug = new URLSearchParams(window.location.search).get('app');
+    if (!appSlug && fullSearch.includes('=?playground')) {
+      const segs = fullSearch.split('=?playground')[0].split('/').filter(Boolean);
+      appSlug = segs[segs.length - 1] || null;
+    }
+    if (appSlug) {
+      window.location.replace('../data/apps/' + appSlug + '/index_detailed.html');
+      return;
+    }
+  }
+
+  // 13. Retro Toast Notification Helper
+  function showRetroToast(message) {
+    let toast = document.getElementById('retroToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'retroToast';
+      toast.className = 'retro-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '[ 📋 ' + message + ' ]';
+    toast.classList.add('show');
+    clearTimeout(toast.__timer);
+    toast.__timer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2200);
+  }
+
+  // 14. 1-Tap Share Button Handler
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-share');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const relUrl = btn.getAttribute('data-share-url') || '';
+    const fullUrl = new URL(relUrl, window.location.href).href;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        showRetroToast('Link copied to clipboard!');
+      }).catch(() => {
+        showRetroToast(fullUrl);
+      });
+    } else {
+      showRetroToast(fullUrl);
+    }
+  });
+
+  // 13. Global Keyboard Shortcuts Listener
+  window.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea') {
+      if (e.key === 'Escape') e.target.blur();
+      return;
+    }
+    const isHome = document.body && document.body.getAttribute('data-page') === 'home';
+    if (isHome) {
+      if (e.key === '1') window.location.href = 'apps/';
+      else if (e.key === '2') window.location.href = 'skills/';
+      else if (e.key === '3') window.location.href = 'combos/';
+      else if (e.key === '4') window.location.href = 'scripts/';
+    }
+    if (e.key === '*' || (e.shiftKey && e.key === '8')) {
+      const s = document.getElementById('topSearchInput');
+      if (s) { e.preventDefault(); s.focus(); }
+    }
+  });
+
+  // Initial update
+  updateCards();
+})();
+`;
+
+const themeEngineJs = fs.readFileSync(path.join(modulesDir, 'themeEngine.js'), 'utf8');
+const accentPickerJs = fs.readFileSync(path.join(srcDir, 'uiComponent', 'accentPickerModal.js'), 'utf8');
+const omniInitJs = 'window.__ARCADE_OMNI_CATALOG__ = ' + JSON.stringify(omniCatalogEntries) + ';';
+const mainBundleJs = [omniInitJs, themeEngineJs, accentPickerJs, clientMainJs].join('\n;\n');
+
+fs.writeFileSync(path.join(publicDir, 'main.js'), mainBundleJs, 'utf8');
+recordAuditEntry('main.js', `${(Buffer.byteLength(mainBundleJs) / 1024).toFixed(2)} KB`, Buffer.byteLength(mainBundleJs), Buffer.byteLength(mainBundleJs), false);
+console.log('  -> public/main.js (' + (Buffer.byteLength(mainBundleJs) / 1024).toFixed(1) + ' KB)\n');
 
 // -----------------------------------------------------------------------------
 // STEP 3: COPY & BUNDLE STYLESHEETS (RULE #1: theme.css is 100% UNTOUCHED)
 // -----------------------------------------------------------------------------
 console.log('[3/5] Bundling & Copying Stylesheets...');
 
-const masterThemePath = path.join(styleDir, 'theme/vintage-computer/theme.css');
+const masterThemePath = path.join(styleDir, 'themes/vintage-computer/theme.css');
 const themeCss = fs.readFileSync(masterThemePath, 'utf8'); // Untouched Obsidian Theme
-const wingetCss = fs.readFileSync(path.join(styleDir, 'winget.css'), 'utf8');
-const floCss = fs.readFileSync(path.join(styleDir, 'flopydisk-cornercut.css'), 'utf8');
-const termCss = fs.readFileSync(path.join(styleDir, 'terminal.css'), 'utf8');
-
-const compiledStyleCss = [
-  '/* === 1. RETRO 3.5" FLOPPY DISKETTE SKEUOMORPHISM & RESPONSIVE CARDS === */',
-  floCss,
-  '/* === 2. TERMINAL CURSOR & PROMPT GHOST SEARCH === */',
-  termCss,
-  '/* === 3. WINGET POD & COLOR PICKER MODAL === */',
-  wingetCss
-].join('\n\n');
-
+const srcStyleCssPath = path.join(srcDir, 'style.css');
+const compiledStyleCss = fs.readFileSync(srcStyleCssPath, 'utf8');
 const compactedStyleCss = compactCss(compiledStyleCss);
-const compactedTermCss = compactCss(termCss);
-const compactedWingetCss = compactCss(wingetCss);
 
 fs.writeFileSync(path.join(publicDir, 'theme.css'), themeCss, 'utf8');
 fs.writeFileSync(path.join(publicDir, 'style.css'), compactedStyleCss, 'utf8');
-fs.writeFileSync(path.join(publicDir, 'terminal.css'), compactedTermCss, 'utf8');
-fs.writeFileSync(path.join(publicDir, 'winget.css'), compactedWingetCss, 'utf8');
-fs.writeFileSync(path.join(srcDir, 'style.css'), compiledStyleCss, 'utf8');
 
 const themeBytes = Buffer.byteLength(themeCss);
 recordAuditEntry('theme.css', `${(themeBytes / 1024).toFixed(2)} KB`, themeBytes, themeBytes, false);
-recordAuditEntry('style.css', `${(Buffer.byteLength(compiledStyleCss) / 1024).toFixed(2)} KB (combine)`, Buffer.byteLength(compiledStyleCss), Buffer.byteLength(compactedStyleCss), true);
-recordAuditEntry('terminal.css', `${(Buffer.byteLength(termCss) / 1024).toFixed(2)} KB`, Buffer.byteLength(termCss), Buffer.byteLength(compactedTermCss), false);
-recordAuditEntry('winget.css', `${(Buffer.byteLength(wingetCss) / 1024).toFixed(2)} KB`, Buffer.byteLength(wingetCss), Buffer.byteLength(compactedWingetCss), false);
+recordAuditEntry('style.css', `${(Buffer.byteLength(compiledStyleCss) / 1024).toFixed(2)} KB`, Buffer.byteLength(compiledStyleCss), Buffer.byteLength(compactedStyleCss), true);
 
 console.log('  -> public/theme.css (Original Obsidian Theme - ' + (themeBytes / 1024).toFixed(1) + ' KB - Rule #1 Safe)');
-console.log('  -> public/style.css (' + (Buffer.byteLength(compactedStyleCss) / 1024).toFixed(1) + ' KB)');
-console.log('  -> public/terminal.css (' + (Buffer.byteLength(compactedTermCss) / 1024).toFixed(1) + ' KB)');
-console.log('  -> public/winget.css (' + (Buffer.byteLength(compactedWingetCss) / 1024).toFixed(1) + ' KB)\n');
+console.log('  -> public/style.css (' + (Buffer.byteLength(compactedStyleCss) / 1024).toFixed(1) + ' KB)\n');
 
 // -----------------------------------------------------------------------------
 // STEP 4: COMPILE HTML SHELLS
 // -----------------------------------------------------------------------------
 console.log('[4/5] Compiling HTML Shells...');
 
-function prepareHtml(htmlStr, scriptBundle, isWinget = false) {
+function prepareHtml(htmlStr, scriptBundle) {
   let res = htmlStr;
-  if (isWinget) {
-    res = res.replace(/href="style\/theme\/vintage-computer\/theme\.css"/g, 'href="theme.css"');
-    res = res.replace(/href="style\/winget\.css"/g, 'href="winget.css"');
-    res = res.replace(/href="theme\/theme\.css"/g, 'href="theme.css"');
-    res = res.replace(/href="theme\/winget\.css"/g, 'href="winget.css"');
-  } else {
-    res = res.replace(/href="style\/theme\/vintage-computer\/theme\.css"/g, 'href="theme.css"');
-    res = res.replace(/href="theme\/theme\.css"/g, 'href="theme.css"');
-    res = res.replace(/href="style\.css"/g, 'href="style.css"');
+  res = res.replace(/href="style\/themes\/vintage-computer\/theme\.css"/g, 'href="theme.css"');
+  res = res.replace(/href="style\/theme\/vintage-computer\/theme\.css"/g, 'href="theme.css"');
+  res = res.replace(/href="theme\/theme\.css"/g, 'href="theme.css"');
+  res = res.replace(/href="style\.css"/g, 'href="style.css"');
 
-    if (!res.includes('href="terminal.css"') && !res.includes('href="style/terminal.css"')) {
-      res = res.replace(/<link rel="stylesheet" href="style\.css">/, '<link rel="stylesheet" href="style.css">\n  <link rel="stylesheet" href="terminal.css">');
-    } else {
-      res = res.replace(/href="style\/terminal\.css"/g, 'href="terminal.css"');
-    }
+  res = res.replace(/<link rel="stylesheet" href="style\/winget\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="style\/flopydisk-cornercut\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="theme\/winget\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="theme\/flopydisk-cornercut\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="theme\/terminal\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="terminal\.css">\s*/g, '');
+  res = res.replace(/<link rel="stylesheet" href="\.\.\/terminal\.css">\s*/g, '');
 
-    res = res.replace(/<link rel="stylesheet" href="style\/winget\.css">\s*/g, '');
-    res = res.replace(/<link rel="stylesheet" href="style\/flopydisk-cornercut\.css">\s*/g, '');
-    res = res.replace(/<link rel="stylesheet" href="theme\/winget\.css">\s*/g, '');
-    res = res.replace(/<link rel="stylesheet" href="theme\/flopydisk-cornercut\.css">\s*/g, '');
-    res = res.replace(/<link rel="stylesheet" href="theme\/terminal\.css">\s*/g, '');
-  }
-
+  res = res.replace(/<script[^>]*src=["'][^"']*(page-apps|page-playground|main)\.js["'][^>]*><\/script>/g, `  <script src="${scriptBundle}"></script>`);
   res = res.replace(/<!-- Modular Vintage Architecture Scripts -->[\s\S]*?<\/body>/, `  <script src="${scriptBundle}"></script>\n</body>`);
   res = res.replace(/<!-- Modular Scripts -->[\s\S]*?<\/body>/, `  <script src="${scriptBundle}"></script>\n</body>`);
   return res;
 }
 
-const srcPageAppsHtml = fs.readFileSync(path.join(srcDir, 'page-apps.html'), 'utf8');
-const pubPageAppsHtml = compactHtml(prepareHtml(srcPageAppsHtml, 'page-apps.js', false));
-fs.writeFileSync(path.join(publicDir, 'page-apps.html'), pubPageAppsHtml, 'utf8');
-recordAuditEntry('page-apps.html', `${(Buffer.byteLength(srcPageAppsHtml) / 1024).toFixed(2)} KB`, Buffer.byteLength(srcPageAppsHtml), Buffer.byteLength(pubPageAppsHtml), false);
+const srcPageAppsHtml = fs.readFileSync(path.join(srcDir, 'uiLayout/apps/layout.html'), 'utf8');
+// Clean Directory Routing: public/apps/index.html (Exact Same UI, adjusted relative paths)
+const pubAppsIndexHtml = compactHtml(prepareHtml(srcPageAppsHtml, '../main.js')
+  .replace(/href="theme\.css"/g, 'href="../theme.css"')
+  .replace(/href="style\.css"/g, 'href="../style.css"')
+  .replace(/href="page-playground\.html\?app=radiansincostan"/g, 'href="../data/apps/radiansincostan/index_detailed.html"')
+  .replace(/href="apps\/radiansincostan\/index\.html"/g, 'href="../data/apps/radiansincostan/index.html"')
+  .replace(/src="apps\/radiansincostan/g, 'src="../data/apps/radiansincostan')
+);
+fs.writeFileSync(path.join(publicAppsDir, 'index.html'), pubAppsIndexHtml, 'utf8');
 
-const srcPagePlaygroundHtml = fs.readFileSync(path.join(srcDir, 'page-playground.html'), 'utf8');
-const pubPagePlaygroundHtml = compactHtml(prepareHtml(srcPagePlaygroundHtml, 'page-playground.js', false));
-fs.writeFileSync(path.join(publicDir, 'page-playground.html'), pubPagePlaygroundHtml, 'utf8');
-recordAuditEntry('page-playground.html', `${(Buffer.byteLength(srcPagePlaygroundHtml) / 1024).toFixed(2)} KB`, Buffer.byteLength(srcPagePlaygroundHtml), Buffer.byteLength(pubPagePlaygroundHtml), false);
+// Function to generate the 3 other pillars with EXACT SAME UI/UX (Hero Floppy 45°, 4 metrics)
+function compilePillarPage(pillarId, title, desc, icon) {
+  const pillarDir = path.join(publicDir, pillarId);
+  if (!fs.existsSync(pillarDir)) fs.mkdirSync(pillarDir, { recursive: true });
+  
+  let html = srcPageAppsHtml
+    .replace(/💾 Vibe-Coded Software Arcade/g, icon + ' ' + title)
+    .replace(/Standalone, single-file, zero-backend web apps[\s\S]*?offline\./, desc)
+    .replace(/prompt-folder" id="promptFolderSegment">apps</g, 'prompt-folder" id="promptFolderSegment">' + pillarId + '<')
+    .replace(/APPS LOADED/g, pillarId.toUpperCase() + ' LOADED');
+    
+  const compacted = compactHtml(prepareHtml(html, '../main.js')
+    .replace(/href="theme\.css"/g, 'href="../theme.css"')
+    .replace(/href="style\.css"/g, 'href="../style.css"')
+    .replace(/href="page-playground\.html\?app=radiansincostan"/g, 'href="../data/apps/radiansincostan/index_detailed.html"')
+    .replace(/href="apps\/radiansincostan\/index\.html"/g, 'href="../data/apps/radiansincostan/index.html"')
+    .replace(/src="apps\/radiansincostan/g, 'src="../data/apps/radiansincostan')
+  );
+  fs.writeFileSync(path.join(pillarDir, 'index.html'), compacted, 'utf8');
+}
 
-const srcWingetHtml = fs.readFileSync(path.join(srcDir, 'winget.html'), 'utf8');
-const pubWingetHtml = compactHtml(prepareHtml(srcWingetHtml, 'winget.js', true));
-fs.writeFileSync(path.join(publicDir, 'winget.html'), pubWingetHtml, 'utf8');
-recordAuditEntry('winget.html', `${(Buffer.byteLength(srcWingetHtml) / 1024).toFixed(2)} KB`, Buffer.byteLength(srcWingetHtml), Buffer.byteLength(pubWingetHtml), false);
+compilePillarPage('skills', 'Modular Agent Directives', 'Standardized prompt directives, AI agent behaviors, and portable development standards.', '⚡');
+compilePillarPage('combos', 'Workflow Pipelines', 'Multi-stage meta-skill workflow orchestration pipelines and release gates.', '🔄');
+compilePillarPage('scripts', 'Context Ops & CLI Automations', 'Portable cross-platform PowerShell, Python, and Bash automation tools with standalone export.', '🛠️');
+recordAuditEntry('apps/index.html', `${(Buffer.byteLength(srcPageAppsHtml) / 1024).toFixed(2)} KB`, Buffer.byteLength(srcPageAppsHtml), Buffer.byteLength(pubAppsIndexHtml), false);
 
-const indexHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0; url=page-apps.html">
-  <script>window.location.replace("page-apps.html");</script>
-  <title>Vintage Computing Arcade -- Redirecting...</title>
-</head>
-<body style="background-color: #0d0f0c; color: #b0a84a; font-family: monospace; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0;">
-  <p style="font-size: 16px; font-weight: 700;">[DRIVE A:\\] LOADING VINTAGE COMPUTING ARCADE...</p>
-  <p style="font-size: 12px; color: #788270;">Redirecting to /page-apps (page-apps.html)</p>
-</body>
-</html>
-`;
+// Master Hub (public/index.html): same hero floppy + navbar shell, body swapped for the 4-subsystem launcher
+function countDataEntries(subDir, mode) {
+  const dir = path.join(repoRoot, 'data', subDir);
+  if (!fs.existsSync(dir)) return 0;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  if (mode === 'dirs') return entries.filter(e => e.isDirectory()).length;
+  return entries.filter(e => e.isFile() && e.name.endsWith('.json')).length;
+}
+
+function countSubsystemItems(subDir) {
+  const catPath = path.join(repoRoot, 'data', subDir, '_catalog.json');
+  if (fs.existsSync(catPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(catPath, 'utf8'));
+      if (Array.isArray(data)) return data.length;
+    } catch (_) {}
+  }
+  return countDataEntries(subDir, subDir === 'apps' ? 'dirs' : 'files');
+}
+
+const srcMenuHtml = fs.readFileSync(path.join(srcDir, 'uiLayout/menu/layout.html'), 'utf8')
+  .replace(/\{\{appsCount\}\}/g, String(countSubsystemItems('apps')))
+  .replace(/\{\{skillsCount\}\}/g, String(countSubsystemItems('skills')))
+  .replace(/\{\{combosCount\}\}/g, String(countSubsystemItems('combos')))
+  .replace(/\{\{scriptsCount\}\}/g, String(countSubsystemItems('scripts')));
+
+const filterStart = srcPageAppsHtml.indexOf('<section class="filter-bar">');
+const mainEnd = srcPageAppsHtml.indexOf('</main>') + '</main>'.length;
+let homeHtml = srcPageAppsHtml.slice(0, filterStart) + srcMenuHtml + srcPageAppsHtml.slice(mainEnd);
+homeHtml = homeHtml
+  .replace(/<title>[\s\S]*?<\/title>/, '<title>Retro IT Knowledge Arcade | Fadhli S Lubis</title>')
+  .replace(/💾 Vibe-Coded Software Arcade/g, '💾 Retro IT Knowledge Arcade')
+  .replace(/Standalone, single-file, zero-backend web apps[\s\S]*?offline\./, 'Decoupled knowledge operating system &amp; standalone web cartridges. Pick a subsystem below or press <strong>[1]-[4]</strong>.')
+  .replace(/APPS LOADED/g, 'SUBSYSTEMS')
+  .replace(/<strong class="metric-val" id="heroAppsLoadedVal">[^<]*<\/strong>/, '<strong class="metric-val" id="heroAppsLoadedVal">4 Modules</strong>')
+  .replace(/<span class="prompt-sep">\/<\/span>\s*<span class="prompt-item prompt-folder"[^>]*>apps<\/span>/, '')
+  .replace(/href="\.\.\/index\.html" class="prompt-item prompt-home"/, 'href="index.html" class="prompt-item prompt-home"')
+  .replace(/<body class="theme-dark">/, '<body class="theme-dark" data-page="home">');
+const indexHtml = prepareHtml(homeHtml, 'main.js');
 const compactedIndexHtml = compactHtml(indexHtml);
 fs.writeFileSync(path.join(publicDir, 'index.html'), compactedIndexHtml, 'utf8');
-fs.writeFileSync(path.join(srcDir, 'index.html'), compactedIndexHtml, 'utf8');
-recordAuditEntry('index.html', `${(Buffer.byteLength(indexHtml) / 1024).toFixed(2)} KB (redirect)`, Buffer.byteLength(indexHtml), Buffer.byteLength(compactedIndexHtml), false);
+recordAuditEntry('index.html', `${(Buffer.byteLength(indexHtml) / 1024).toFixed(2)} KB (home hub)`, Buffer.byteLength(indexHtml), Buffer.byteLength(compactedIndexHtml), false);
 
-console.log('  -> public/page-apps.html');
-console.log('  -> public/page-playground.html');
-console.log('  -> public/winget.html');
-console.log('  -> public/index.html (redirects to page-apps.html)\n');
+console.log('  -> public/apps/index.html');
+console.log('  -> public/skills/index.html');
+console.log('  -> public/combos/index.html');
+console.log('  -> public/scripts/index.html');
+console.log('  -> public/index.html (Master Hub)\n');
 
 // -----------------------------------------------------------------------------
 // STEP 5: PASS-THROUGH ASSETS & SLIDES
@@ -656,6 +1225,10 @@ function copyRecursiveSync(src, dest) {
 }
 
 copyRecursiveSync(path.join(srcDir, 'assets'), path.join(publicDir, 'assets'));
+copyRecursiveSync(path.join(srcDir, 'static'), path.join(publicDir, 'static'));
+if (fs.existsSync(path.join(repoRoot, 'data'))) {
+  copyRecursiveSync(path.join(repoRoot, 'data'), path.join(publicDir, 'data'));
+}
 
 const slidesSrc = path.join(srcDir, 'slides');
 const slidesDest = path.join(publicDir, 'slides');

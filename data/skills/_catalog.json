@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "prompt-engineering-protocol",
+    "id": "prompt-engineering-protocol",
+    "title": "Prompt Engineering Directives",
+    "sector": "prompts",
+    "category": "AGENTIC PROMPTS",
+    "scope": ["prompts"],
+    "fileSize": "4.2 KB",
+    "tags": ["Directives", "Standard", "Agentic"],
+    "overview": "Standardized prompt directives, AI agent behaviors, and portable development standards.",
+    "badge": "v1.2",
+    "linkLive": "skills/",
+    "linkSubpage": "skills/?item=prompt-engineering-protocol"
+  },
+  {
+    "slug": "git-workflow-guard",
+    "id": "git-workflow-guard",
+    "title": "Git Rebase & Branching Guard",
+    "sector": "devops",
+    "category": "DEV WORKFLOW",
+    "scope": ["devops"],
+    "fileSize": "3.1 KB",
+    "tags": ["Git", "Lifecycle", "Workflow"],
+    "overview": "Non-destructive Git branching conventions, rebase safety gates, and atomic PR guidelines.",
+    "badge": "v2.0",
+    "linkLive": "skills/",
+    "linkSubpage": "skills/?item=git-workflow-guard"
+  },
+  {
+    "slug": "code-quarantine-rules",
+    "id": "code-quarantine-rules",
+    "title": "Code Quarantine Standards",
+    "sector": "security",
+    "category": "SECURITY & ARCH",
+    "scope": ["security"],
+    "fileSize": "2.9 KB",
+    "tags": ["Architecture", "Safety", "Brief-First"],
+    "overview": "Strict pre-coding quarantine freezing executable code until architectural brief approval.",
+    "badge": "v1.0",
+    "linkLive": "skills/",
+    "linkSubpage": "skills/?item=code-quarantine-rules"
+  }
+]

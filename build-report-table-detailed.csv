@@ -1,0 +1,16 @@
+File_Name,Source_Type,Compiled_KB,Compacted_KB,Saved_KB,Reduction_Pct
+apps/plumbing-arcitecture-inventory/index.md,"2.13 KB (source md)",2.13,0,2.13,source-only
+apps/plumbing-arcitecture-inventory/index_catalog.json,"1.11 KB (csr)",1.11,1.11,0,-0.0%
+apps/plumbing-arcitecture-inventory/index.html,"66.91 KB",66.91,66.91,0,-0.0%
+apps/radiansincostan/index.md,"2.55 KB (source md)",2.55,0,2.55,source-only
+apps/radiansincostan/index_catalog.json,"0.95 KB (csr)",0.95,0.95,0,-0.0%
+apps/radiansincostan/index.html,"158.60 KB",158.6,158.6,0,-0.0%
+apps/radiansincostan/img.webp,"46.29 KB",46.29,46.29,0,-0.0%
+apps/radiansincostan/img-darkmode.webp,"46.29 KB",46.29,46.29,0,-0.0%
+apps/radiansincostan/img-lightmode.webp,"44.84 KB",44.84,44.84,0,-0.0%
+apps/_catalog.json,"2.17 KB (catalog)",2.17,2.17,0,-0.0%
+main.js,"48.68 KB",48.68,48.68,0,-0.0%
+theme.css,"90.98 KB",90.98,90.98,0,-0.0%
+style.css,"77.79 KB",77.79,57.11,20.68,-26.6%
+apps/index.html,"12.34 KB",12.34,12.3,0.04,-0.3%
+index.html,"15.41 KB (home hub)",15.41,14.83,0.58,-3.8%

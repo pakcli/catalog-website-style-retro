@@ -2,7 +2,7 @@
   {
     "slug": "radiansincostan",
     "id": "radiansincostan",
-    "title": "📐 Unit Circle Resolver",
+    "title": "Unit Circle Resolver",
     "sector": "edu",
     "category": "MATH & CANVAS",
     "scope": [
@@ -24,6 +24,6 @@
     "linkLive": "apps/radiansincostan/index.html",
     "linkSubpage": "page-playground.html?app=radiansincostan",
     "linkPlayground": "apps/radiansincostan/index_playground.html",
-    "linkGithub": "https://github.com/pakcli/fadhlisl-my-id"
+    "linkGithub": "https://github.com/pakcli/retro-template-catalog-website"
   }
 ]

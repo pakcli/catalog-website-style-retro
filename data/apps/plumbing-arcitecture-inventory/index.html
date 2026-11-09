@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plumbing Architecture & Inventory Tracker</title>
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #eef2f5;
+  --card: #ffffff;
+  --card-sub: #f6f9fb;
+  --tx: #13222a;
+  --mu: #5a6e7c;
+  --bd: #d0dce4;
+  --ac: #007799;
+  --ac-hover: #005f7a;
+  --ac-sub: #e1f3f8;
+  --ok: #15803d;
+  --ok-bg: #eafaf1;
+  --bad: #b91c1c;
+  --bad-bg: #fdf2f2;
+  --wn: #b45309;
+  --wn-bg: #fffbeb;
+  --cold: #0284c7;
+  --hot: #e11d48;
+  --drain: #78716c;
+  --vent: #0d9488;
+  --focus: #38bdf8;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1419;
+    --card: #152028;
+    --card-sub: #1b2832;
+    --tx: #e7eff3;
+    --mu: #8c9fae;
+    --bd: #263845;
+    --ac: #38bdf8;
+    --ac-hover: #0ea5e9;
+    --ac-sub: #113042;
+    --ok: #4ade80;
+    --ok-bg: #143522;
+    --bad: #f87171;
+    --bad-bg: #3f1919;
+    --wn: #fbbf24;
+    --wn-bg: #382c11;
+    --cold: #38bdf8;
+    --hot: #fb7185;
+    --drain: #a8a29e;
+    --vent: #2dd4bf;
+    --shadow: 0 2px 4px rgba(0,0,0,0.4);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0c1419;
+  --card: #152028;
+  --card-sub: #1b2832;
+  --tx: #e7eff3;
+  --mu: #8c9fae;
+  --bd: #263845;
+  --ac: #38bdf8;
+  --ac-hover: #0ea5e9;
+  --ac-sub: #113042;
+  --ok: #4ade80;
+  --ok-bg: #143522;
+  --bad: #f87171;
+  --bad-bg: #3f1919;
+  --wn: #fbbf24;
+  --wn-bg: #382c11;
+  --cold: #38bdf8;
+  --hot: #fb7185;
+  --drain: #a8a29e;
+  --vent: #2dd4bf;
+  --shadow: 0 2px 4px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 20px rgba(0,0,0,0.6);
+}
+
+:root[data-theme="light"] {
+  --bg: #eef2f5;
+  --card: #ffffff;
+  --card-sub: #f6f9fb;
+  --tx: #13222a;
+  --mu: #5a6e7c;
+  --bd: #d0dce4;
+  --ac: #007799;
+  --ac-hover: #005f7a;
+  --ac-sub: #e1f3f8;
+  --ok: #15803d;
+  --ok-bg: #eafaf1;
+  --bad: #b91c1c;
+  --bad-bg: #fdf2f2;
+  --wn: #b45309;
+  --wn-bg: #fffbeb;
+  --cold: #0284c7;
+  --hot: #e11d48;
+  --drain: #78716c;
+  --vent: #0d9488;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tx);
+  font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 14px 16px 40px;
+}
+
+/* App Header & Top Bar */
+header.app-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.brand-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-title h1 {
+  font-size: 1.35rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.brand-title .badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--ac-sub);
+  color: var(--ac);
+  border: 1px solid var(--ac);
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stats Pill Bar */
+.stats-banner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.stat-pill {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: var(--shadow);
+}
+.stat-pill .lbl {
+  font-size: 0.75rem;
+  color: var(--mu);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+.stat-pill .val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Tabs Nav */
+nav.tab-nav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+nav.tab-nav button {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid var(--bd);
+  background: var(--card);
+  color: var(--tx);
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+nav.tab-nav button:hover {
+  background: var(--card-sub);
+  border-color: var(--ac);
+}
+nav.tab-nav button.on {
+  background: var(--ac);
+  color: #ffffff;
+  border-color: var(--ac);
+  box-shadow: 0 2px 5px rgba(0,119,153,0.3);
+}
+
+/* Cards & Containers */
+.card {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.card-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-sub {
+  background: var(--card-sub);
+  border: 1px dashed var(--bd);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 8px 0;
+}
+
+/* Typography & Layout Utilities */
+.row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.g3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.mu { color: var(--mu); font-size: 0.88rem; }
+.sm { font-size: 0.8rem; }
+.nowrap { white-space: nowrap; }
+
+/* Form Controls */
+input, select, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--tx);
+  font: inherit;
+  margin: 4px 0;
+  transition: border-color 0.15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--ac);
+  box-shadow: 0 0 0 2px var(--ac-sub);
+}
+
+/* Buttons */
+button { font-family: inherit; cursor: pointer; }
+button.b {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--ac);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease;
+}
+button.b:hover { background: var(--ac-hover); }
+button.s {
+  padding: 6px 12px;
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--tx);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+button.s:hover {
+  background: var(--card-sub);
+  border-color: var(--mu);
+}
+button.x {
+  border: 0;
+  background: none;
+  color: var(--bad);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 5px;
+}
+button.x:hover { background: var(--bad-bg); }
+button.icon-btn {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 7px;
+  padding: 6px 10px;
+  color: var(--tx);
+  font-size: 0.9rem;
+}
+
+/* Badges & Tags */
+.badge-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-cold { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+.badge-hot { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+.badge-drain { background: #f5f5f4; color: #44403c; border: 1px solid #d6d3d1; }
+.badge-vent { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-bad { background: var(--bad-bg); color: var(--bad); }
+.badge-wn { background: var(--wn-bg); color: var(--wn); }
+
+.tag { font-weight: 700; margin-right: 6px; }
+.add { color: var(--ok); }
+.rem { color: var(--bad); }
+.chg { color: var(--wn); }
+.ok { color: var(--ok); font-weight: 600; }
+.bad { color: var(--bad); font-weight: 600; }
+
+/* Interactive SVG Diagram */
+.diagram-wrap {
+  width: 100%;
+  background: var(--card-sub);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+  overflow-x: auto;
+}
+.diagram-svg {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.diagram-node {
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.diagram-node:hover {
+  filter: drop-shadow(0 2px 6px rgba(0,119,153,0.4));
+}
+.diagram-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  color: var(--mu);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+/* Modal Window */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.modal-box {
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  max-width: 540px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 18px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Checklist / Shopping Mode */
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bd);
+  transition: background 0.1s ease;
+}
+.shop-item:hover { background: var(--card-sub); }
+.shop-item.checked {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.shop-item input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Responsive Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+.data-table th, .data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--bd);
+  text-align: left;
+}
+.data-table th {
+  background: var(--card-sub);
+  color: var(--mu);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+@media print {
+  body { background: #fff; color: #000; }
+  nav.tab-nav, .header-actions, button { display: none !important; }
+  .card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header class="app-hdr">
+  <div class="brand-title">
+    <h1>🚰 Plumbing Architecture & Inventory</h1>
+    <span class="badge">PRO v2.5</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" id="theme-btn">🌓 Theme</button>
+  </div>
+</header>
+
+<div class="stats-banner" id="stats-banner">
+  <!-- Populated dynamically -->
+</div>
+
+<nav class="tab-nav" id="nav"></nav>
+
+<div id="app"></div>
+
+<div id="modal-root"></div>
+
+</main>
+
+<script>
+var KEY = "plumbing-tracker-v1";
+var S;
+
+function uid() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function esc(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+/* Theme Controller */
+function initTheme() {
+  var saved = localStorage.getItem("plumbing-theme");
+  if (saved) {
+    document.documentElement.setAttribute("data-theme", saved);
+  }
+}
+
+function toggleTheme() {
+  var cur = document.documentElement.getAttribute("data-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  var next = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("plumbing-theme", next);
+}
+
+/* Realistic Plumbing System Seed */
+function seed() {
+  var p1 = uid(), p2 = uid(), p3 = uid(), p4 = uid(), p5 = uid(), p6 = uid(), p7 = uid(), p8 = uid(), p9 = uid(), p10 = uid();
+  var v1 = uid(), v2 = uid();
+
+  return {
+    tab: "schematic",
+    sel: v2,
+    ca: v1,
+    cb: v2,
+    shoppingChecked: {},
+    activeZoneFilter: "all",
+    parts: [
+      { id: p1, name: "Full Port Ball Valve", category: "Valves", material: "Brass", size: "3/4 in", model: "Apollo Lead-Free NPT", owned: 4, minStock: 2, unitCost: 16.50, bin: "Shelf A-1" },
+      { id: p2, name: "PEX-A Tubing (Cold)", category: "Pipes", material: "PEX-A", size: "3/4 in (100ft)", model: "Uponor AquaPEX Blue", owned: 2, minStock: 1, unitCost: 48.00, bin: "Rack 3" },
+      { id: p3, name: "PEX-A Tubing (Hot)", category: "Pipes", material: "PEX-A", size: "1/2 in (100ft)", model: "Uponor AquaPEX Red", owned: 2, minStock: 1, unitCost: 39.50, bin: "Rack 3" },
+      { id: p4, name: "90° Elbow Expansion", category: "Fittings", material: "Brass / PPSU", size: "3/4 in", model: "ProPEX Expansion", owned: 14, minStock: 5, unitCost: 2.75, bin: "Bin F-2" },
+      { id: p5, name: "90° Elbow Expansion", category: "Fittings", material: "Brass / PPSU", size: "1/2 in", model: "ProPEX Expansion", owned: 20, minStock: 8, unitCost: 1.85, bin: "Bin F-3" },
+      { id: p6, name: "Reducing Tee 3/4 x 3/4 x 1/2", category: "Fittings", material: "PPSU", size: "3/4 x 1/2 in", model: "ProPEX Tee", owned: 8, minStock: 4, unitCost: 3.20, bin: "Bin F-5" },
+      { id: p7, name: "Pressure Reducing Valve (PRV)", category: "Valves", material: "Cast Bronze", size: "3/4 in", model: "Watts LF25AUB-Z3 50PSI", owned: 1, minStock: 1, unitCost: 89.00, bin: "Shelf A-3" },
+      { id: p8, name: "Dual Stage Sediment/Carbon Filter", category: "Treatment", material: "Composite", size: "3/4 in Port", model: "Pentair 10-inch Big Blue", owned: 1, minStock: 1, unitCost: 119.00, bin: "Station 1" },
+      { id: p9, name: "Sanitary P-Trap Kit", category: "Drain & DWV", material: "PVC Sch 40", size: "1-1/2 in", model: "Charlotte Pipe Slip-Joint", owned: 5, minStock: 2, unitCost: 7.50, bin: "Shelf D-1" },
+      { id: p10, name: "Quarter-Turn Angle Stop", category: "Valves", material: "Chrome Brass", size: "1/2 in Nom x 3/8 in OD", model: "BrassCraft Compression", owned: 8, minStock: 4, unitCost: 8.25, bin: "Bin V-1" }
+    ],
+    versions: [
+      {
+        id: v1,
+        name: "v1 Original As-Built (Copper/Mix)",
+        date: "2024-01-15",
+        status: "Archived",
+        author: "Original Installer",
+        note: "Legacy baseline supply with basic main shutoff and single filter.",
+        items: [
+          { loc: "Main Water Inflow", sys: "Cold", partId: p1, qty: 1, note: "Street main shutoff" },
+          { loc: "Main Inflow Filter", sys: "Treatment", partId: p8, qty: 1, note: "Whole house sediment" },
+          { loc: "Kitchen Sink Cold", sys: "Cold", partId: p10, qty: 1, note: "Angle stop" },
+          { loc: "Kitchen Sink Hot", sys: "Hot", partId: p10, qty: 1, note: "Angle stop" },
+          { loc: "Kitchen Sink Drain", sys: "Drain", partId: p9, qty: 1, note: "Trap" },
+          { loc: "Master Bath Lavatory", sys: "Cold", partId: p10, qty: 2, note: "Dual shutoffs" }
+        ]
+      },
+      {
+        id: v2,
+        name: "v2 PEX Manifold & PRV Modernization",
+        date: today(),
+        status: "As-Built",
+        author: "Lead Master Plumber",
+        note: "Added Watts PRV, Dedicated 3/4 trunk loops, Uponor ProPEX runs, and dual bathroom feeds.",
+        items: [
+          { loc: "Water Main Meter Inlet", sys: "Cold", partId: p1, qty: 1, note: "Main brass gate replacement" },
+          { loc: "Pressure Regulator Station", sys: "Cold", partId: p7, qty: 1, note: "Calibrated to 55 PSI" },
+          { loc: "Whole House Filtration", sys: "Treatment", partId: p8, qty: 1, note: "Dual-stage pre-filter" },
+          { loc: "Cold Supply Main Trunk", sys: "Cold", partId: p2, qty: 1, note: "75ft 3/4 trunk" },
+          { loc: "Hot Supply Main Trunk", sys: "Hot", partId: p3, qty: 1, note: "60ft 1/2 distribution" },
+          { loc: "Water Heater Isolation", sys: "Cold", partId: p1, qty: 2, note: "Inlet & outlet service valves" },
+          { loc: "Manifold Branch Takeoffs", sys: "Cold", partId: p6, qty: 6, note: "Run to baths & kitchen" },
+          { loc: "Kitchen Sink Riser Corner", sys: "Cold", partId: p4, qty: 4, note: "Riser bends" },
+          { loc: "Kitchen Sink Under-Cabinet", sys: "Cold", partId: p10, qty: 2, note: "Hot & cold stops" },
+          { loc: "Kitchen DWV Under-Counter", sys: "Drain", partId: p9, qty: 1, note: "1-1/2 sanitary P-trap" },
+          { loc: "Master Bath Vanity Riser", sys: "Cold", partId: p5, qty: 6, note: "1/2 expansion elbows" },
+          { loc: "Master Bath Vanity Stops", sys: "Cold", partId: p10, qty: 2, note: "Double vanity feeds" },
+          { loc: "Guest Bath Vanity Stops", sys: "Cold", partId: p10, qty: 2, note: "Stop valves" },
+          { loc: "Master Bath DWV Drain", sys: "Drain", partId: p9, qty: 2, note: "Shower & sink traps" }
+        ]
+      }
+    ],
+    maintenanceLogs: [
+      { id: uid(), date: today(), task: "Main Shutoff Valve Full Exercise", zone: "Utility Room", status: "Done", notes: "Rotated 90° smoothly, zero weeping." },
+      { id: uid(), date: "2026-09-10", task: "Whole House Carbon Filter Cartridge Replacement", zone: "Filter Bay", status: "Done", notes: "Flushed 5 gallons before tie-in." },
+      { id: uid(), date: "2026-12-01", task: "Water Heater Anode Rod Inspection & Sediment Flush", zone: "Water Heater", status: "Scheduled", notes: "Check magnesium rod wear." }
+    ]
+  };
+}
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.parts) && Array.isArray(d.versions) && d.versions.length) {
+        if (!d.shoppingChecked) d.shoppingChecked = {};
+        if (!d.maintenanceLogs) d.maintenanceLogs = [];
+        return d;
+      }
+    }
+  } catch (e) {
+    console.warn("Storage load fallback:", e);
+  }
+  return seed();
+}
+
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(S));
+  } catch (e) {
+    console.error("Save error:", e);
+  }
+}
+
+function latest() {
+  return S.versions[S.versions.length - 1];
+}
+
+function curV() {
+  return S.versions.find(function(v) { return v.id === S.sel; }) || latest();
+}
+
+/* In-use quantity count cross-referenced to active version */
+function used(id) {
+  var v = curV();
+  return v.items.filter(function(i) { return i.partId === id; })
+                .reduce(function(acc, i) { return acc + (parseInt(i.qty) || 0); }, 0);
+}
+
+function getPart(id) {
+  return S.parts.find(function(x) { return x.id === id; });
+}
+
+function pn(id) {
+  var p = getPart(id);
+  if (!p) return "Deleted Component";
+  var extra = [];
+  if (p.size) extra.push(p.size);
+  if (p.material) extra.push(p.material);
+  return p.name + (extra.length ? " (" + extra.join(" · ") + ")" : "");
+}
+
+function setTab(t) {
+  S.tab = t;
+  save();
+  render();
+}
+
+/* Part Operations */
+function addPart() {
+  var name = $("p-name").value.trim();
+  if (!name) {
+    alert("Please enter a part name.");
+    return;
+  }
+  var cat = $("p-cat").value;
+  var mat = $("p-mat").value.trim();
+  var size = $("p-size").value.trim();
+  var model = $("p-model").value.trim();
+  var owned = Math.max(0, parseInt($("p-owned").value) || 0);
+  var minStock = Math.max(0, parseInt($("p-min").value) || 0);
+  var cost = Math.max(0, parseFloat($("p-cost").value) || 0);
+  var bin = $("p-bin").value.trim();
+
+  S.parts.push({
+    id: uid(),
+    name: name,
+    category: cat || "Fittings",
+    material: mat,
+    size: size,
+    model: model,
+    owned: owned,
+    minStock: minStock,
+    unitCost: cost,
+    bin: bin
+  });
+  save();
+  render();
+}
+
+function adj(id, delta) {
+  var p = getPart(id);
+  if (!p) return;
+  p.owned = Math.max(0, (parseInt(p.owned) || 0) + delta);
+  save();
+  render();
+}
+
+function editPartModal(id) {
+  var p = getPart(id);
+  if (!p) return;
+  var html = '<div class="modal-overlay" onclick="closeModal(event)">' +
+    '<div class="modal-box" onclick="event.stopPropagation()">' +
+      '<div class="card-header"><h3 class="card-title">Edit Inventory Item</h3><button class="x" onclick="closeModal()">✕</button></div>' +
+      '<label class="sm mu">Part Name</label><input id="ep-name" value="' + esc(p.name) + '">' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Category</label><select id="ep-cat">' +
+          ['Valves', 'Pipes', 'Fittings', 'Treatment', 'Drain & DWV', 'Fixtures', 'Hardware'].map(function(c) {
+            return '<option value="' + c + '"' + (p.category === c ? ' selected' : '') + '>' + c + '</option>';
+          }).join('') +
+        '</select></div>' +
+        '<div><label class="sm mu">Material</label><input id="ep-mat" value="' + esc(p.material || '') + '" placeholder="e.g. Brass, PEX-A, PVC"></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Size / Spec</label><input id="ep-size" value="' + esc(p.size || '') + '" placeholder="e.g. 3/4 in, 1/2 in"></div>' +
+        '<div><label class="sm mu">Brand / Model</label><input id="ep-model" value="' + esc(p.model || '') + '"></div>' +
+      '</div>' +
+      '<div class="g3">' +
+        '<div><label class="sm mu">Stock Owned</label><input id="ep-owned" type="number" min="0" value="' + (p.owned || 0) + '"></div>' +
+        '<div><label class="sm mu">Min Stock Alert</label><input id="ep-min" type="number" min="0" value="' + (p.minStock || 0) + '"></div>' +
+        '<div><label class="sm mu">Unit Cost ($)</label><input id="ep-cost" type="number" step="0.01" min="0" value="' + (p.unitCost || 0) + '"></div>' +
+      '</div>' +
+      '<label class="sm mu">Storage Bin / Location</label><input id="ep-bin" value="' + esc(p.bin || '') + '" placeholder="e.g. Shelf B-2">' +
+      '<div class="row" style="margin-top:14px">' +
+        '<button class="b" onclick="savePartEdit(\'' + p.id + '\')">Save Changes</button>' +
+        '<button class="s" onclick="closeModal()">Cancel</button>' +
+      '</div>' +
+    '</div></div>';
+  $("modal-root").innerHTML = html;
+}
+
+function savePartEdit(id) {
+  var p = getPart(id);
+  if (!p) return;
+  p.name = $("ep-name").value.trim() || p.name;
+  p.category = $("ep-cat").value;
+  p.material = $("ep-mat").value.trim();
+  p.size = $("ep-size").value.trim();
+  p.model = $("ep-model").value.trim();
+  p.owned = Math.max(0, parseInt($("ep-owned").value) || 0);
+  p.minStock = Math.max(0, parseInt($("ep-min").value) || 0);
+  p.unitCost = Math.max(0, parseFloat($("ep-cost").value) || 0);
+  p.bin = $("ep-bin").value.trim();
+  closeModal();
+  save();
+  render();
+}
+
+function delPart(id) {
+  var u = used(id);
+  if (u > 0 && !confirm("This part is actively used in the current version (" + u + " units). Delete anyway?")) return;
+  S.parts = S.parts.filter(function(x) { return x.id !== id; });
+  save();
+  render();
+}
+
+function closeModal(e) {
+  $("modal-root").innerHTML = "";
+}
+
+/* Version & Placements Operations */
+function selV(id) {
+  S.sel = id;
+  save();
+  render();
+}
+
+function newV() {
+  var src = curV();
+  var name = $("v-name").value.trim() || "v" + (S.versions.length + 1) + " Revision";
+  var author = $("v-author").value.trim() || "Installer";
+  var note = $("v-note").value.trim();
+  var status = $("v-status").value;
+
+  var v = {
+    id: uid(),
+    name: name,
+    date: today(),
+    status: status,
+    author: author,
+    note: note,
+    items: src.items.map(function(i) {
+      return { loc: i.loc, sys: i.sys || "Cold", partId: i.partId, qty: i.qty, note: i.note || "" };
+    })
+  };
+  S.versions.push(v);
+  S.sel = v.id;
+  save();
+  render();
+}
+
+function delV() {
+  if (S.versions.length < 2) {
+    alert("You must keep at least one baseline version.");
+    return;
+  }
+  if (!confirm("Are you sure you want to permanently delete this version?")) return;
+  S.versions = S.versions.filter(function(v) { return v.id !== S.sel; });
+  S.sel = latest().id;
+  save();
+  render();
+}
+
+function addItem() {
+  var loc = $("i-loc").value.trim();
+  var pid = $("i-part").value;
+  var sys = $("i-sys").value;
+  var qty = Math.max(1, parseInt($("i-qty").value) || 1);
+  var note = $("i-note").value.trim();
+
+  if (!loc) {
+    alert("Please enter a location / zone for this placement.");
+    return;
+  }
+  if (!pid) {
+    alert("Please select a part from inventory first.");
+    return;
+  }
+
+  curV().items.push({
+    loc: loc,
+    sys: sys,
+    partId: pid,
+    qty: qty,
+    note: note
+  });
+  save();
+  render();
+}
+
+function delItem(idx) {
+  curV().items.splice(idx, 1);
+  save();
+  render();
+}
+
+/* Version Diff Engine */
+function setCmp(k, v) {
+  S[k] = v;
+  save();
+  render();
+}
+
+function keyed(v) {
+  var m = {}, c = {};
+  v.items.forEach(function(i) {
+    var base = (i.loc || "").toLowerCase().trim();
+    c[base] = (c[base] || 0) + 1;
+    m[base + "#" + c[base]] = i;
+  });
+  return m;
+}
+
+function diff(a, b) {
+  var A = keyed(a), B = keyed(b), out = [], same = 0, costDelta = 0;
+  Object.keys(B).forEach(function(k) {
+    var x = A[k], y = B[k];
+    var py = getPart(y.partId);
+    var cy = py ? (py.unitCost || 0) * y.qty : 0;
+    if (!x) {
+      out.push(["add", "Added", y.loc, (y.sys ? "[" + y.sys + "] " : "") + pn(y.partId) + " ×" + y.qty + (y.note ? " — " + y.note : "")]);
+      costDelta += cy;
+    } else if (x.partId !== y.partId || x.qty !== y.qty || x.sys !== y.sys) {
+      var px = getPart(x.partId);
+      var cx = px ? (px.unitCost || 0) * x.qty : 0;
+      out.push(["chg", "Changed", y.loc, pn(x.partId) + " ×" + x.qty + " → " + pn(y.partId) + " ×" + y.qty]);
+      costDelta += (cy - cx);
+    } else {
+      same++;
+    }
+  });
+
+  /* FIXED: Correct syntax without double closing brackets */
+  Object.keys(A).forEach(function(k) {
+    if (!B[k]) {
+      var px = getPart(A[k].partId);
+      var cx = px ? (px.unitCost || 0) * A[k].qty : 0;
+      out.push(["rem", "Removed", A[k].loc, pn(A[k].partId) + " ×" + A[k].qty]);
+      costDelta -= cx;
+    }
+  });
+
+  return { out: out, same: same, costDelta: costDelta };
+}
+
+function opts(sel) {
+  return S.versions.map(function(v) {
+    return '<option value="' + v.id + '"' + (v.id === sel ? ' selected' : '') + '>' +
+      esc(v.name) + ' (' + v.date + ' · ' + (v.status || 'Active') + ')' +
+    '</option>';
+  }).join('');
+}
+
+/* Shopping & Checklist Mode */
+function toggleShopItem(key) {
+  S.shoppingChecked = S.shoppingChecked || {};
+  S.shoppingChecked[key] = !S.shoppingChecked[key];
+  save();
+  render();
+}
+
+function copyShoppingList() {
+  var list = getShoppingData().missing;
+  if (!list.length) {
+    alert("Good news! You have all required parts in stock. Nothing to buy!");
+    return;
+  }
+  var txt = "🛒 PLUMBING PROCUREMENT SHOPPING LIST (" + curV().name + ")\n" +
+            "Generated: " + today() + "\n" +
+            "====================================================\n\n";
+  var total = 0;
+  list.forEach(function(item, idx) {
+    var subtotal = item.needed * item.part.unitCost;
+    total += subtotal;
+    txt += (idx + 1) + ". [ ] " + item.part.name + " (" + (item.part.size || "") + " " + (item.part.material || "") + ")\n" +
+           "   Needed: " + item.needed + " units | Owned: " + item.part.owned + " | Est: $" + subtotal.toFixed(2) + "\n";
+  });
+  txt += "\n====================================================\n" +
+         "TOTAL ESTIMATED BUDGET: $" + total.toFixed(2);
+
+  navigator.clipboard.writeText(txt).then(function() {
+    alert("Shopping list copied to clipboard!");
+  }).catch(function() {
+    prompt("Copy shopping list:", txt);
+  });
+}
+
+function getShoppingData() {
+  var v = curV();
+  var reqMap = {};
+  v.items.forEach(function(i) {
+    reqMap[i.partId] = (reqMap[i.partId] || 0) + (parseInt(i.qty) || 0);
+  });
+
+  var missing = [];
+  var allReq = [];
+  var totalEstCost = 0;
+
+  Object.keys(reqMap).forEach(function(pid) {
+    var p = getPart(pid) || { id: pid, name: "Unknown Part", owned: 0, unitCost: 0 };
+    var needed = reqMap[pid];
+    var owned = p.owned || 0;
+    var shortage = Math.max(0, needed - owned);
+    var item = {
+      part: p,
+      required: needed,
+      owned: owned,
+      needed: shortage,
+      cost: shortage * (p.unitCost || 0)
+    };
+    allReq.push(item);
+    if (shortage > 0) {
+      missing.push(item);
+      totalEstCost += item.cost;
+    }
+  });
+
+  return { missing: missing, all: allReq, totalEstCost: totalEstCost };
+}
+
+/* Maintenance Operations */
+function addMaintLog() {
+  var task = $("m-task").value.trim();
+  var zone = $("m-zone").value.trim();
+  var date = $("m-date").value || today();
+  var status = $("m-status").value;
+  var notes = $("m-notes").value.trim();
+
+  if (!task) {
+    alert("Please enter a maintenance task description.");
+    return;
+  }
+
+  S.maintenanceLogs = S.maintenanceLogs || [];
+  S.maintenanceLogs.unshift({
+    id: uid(),
+    date: date,
+    task: task,
+    zone: zone || "General System",
+    status: status,
+    notes: notes
+  });
+  save();
+  render();
+}
+
+function delMaintLog(id) {
+  S.maintenanceLogs = S.maintenanceLogs.filter(function(m) { return m.id !== id; });
+  save();
+  render();
+}
+
+/* Backup & Presets */
+function exportB() {
+  $("b-box").value = JSON.stringify(S, null, 2);
+}
+
+function downloadBackupJson() {
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(S, null, 2));
+  var a = document.createElement("a");
+  a.setAttribute("href", dataStr);
+  a.setAttribute("download", "plumbing-inventory-" + today() + ".json");
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function restoreB() {
+  try {
+    var raw = $("b-box").value.trim();
+    if (!raw) throw "Empty data";
+    var d = JSON.parse(raw);
+    if (!Array.isArray(d.parts) || !Array.isArray(d.versions) || !d.versions.length) throw "Invalid schema";
+    S = d;
+    S.sel = latest().id;
+    save();
+    render();
+    alert("Backup successfully restored!");
+  } catch (e) {
+    alert("Could not restore backup. Please verify valid JSON data.");
+  }
+}
+
+function loadPreset(type) {
+  if (!confirm("Load preset '" + type + "'? This will append or replace your system data.")) return;
+  if (type === "tinyhouse") {
+    var t_pump = uid(), t_tank = uid(), t_acc = uid(), t_filt = uid(), t_pex = uid(), t_v = uid();
+    S.parts.push(
+      { id: t_pump, name: "12V Diaphragm Water Pump", category: "Treatment", material: "Nylon/EPDM", size: "1/2 in NPT 3.0 GPM", model: "Shurflo 4008 Revolution", owned: 1, minStock: 1, unitCost: 74.99, bin: "Van Bay" },
+      { id: t_tank, name: "Freshwater Storage Tank", category: "Treatment", material: "Food Grade Polyethylene", size: "33 Gallon", model: "Class A Customs BBL-33", owned: 1, minStock: 1, unitCost: 145.00, bin: "Underbed" },
+      { id: t_acc, name: "Pressurized Accumulator Tank", category: "Treatment", material: "Nylon", size: "1/2 in Port 24oz", model: "Seaflo Pre-Pressurized", owned: 1, minStock: 1, unitCost: 28.50, bin: "Van Bay" },
+      { id: t_pex, name: "PEX Tubing Blue 1/2 in", category: "Pipes", material: "PEX-B", size: "1/2 in (50ft)", model: "SharkBite PEX", owned: 1, minStock: 1, unitCost: 22.00, bin: "Van Bay" }
+    );
+    S.versions.push({
+      id: t_v,
+      name: "v" + (S.versions.length + 1) + " Off-Grid RV / Tiny House Setup",
+      date: today(),
+      status: "Planned",
+      author: "Mobile Tech",
+      note: "12V RV pump with pressurized accumulator, inline sediment strainer, and galley loop.",
+      items: [
+        { loc: "Tank Outlet", sys: "Cold", partId: t_tank, qty: 1, note: "Gravity draw bottom port" },
+        { loc: "Pump Inflow", sys: "Treatment", partId: t_pump, qty: 1, note: "Mounted on vibration pads" },
+        { loc: "Pump Discharge Buffer", sys: "Treatment", partId: t_acc, qty: 1, note: "Pulsation dampener" },
+        { loc: "Galley Sink Cold Feed", sys: "Cold", partId: t_pex, qty: 1, note: "Direct PEX line" }
+      ]
+    });
+    S.sel = t_v;
+  } else if (type === "default") {
+    S = seed();
+  }
+  save();
+  render();
+}
+
+function exportCsv() {
+  var csv = "Part Name,Category,Material,Size,Brand/Model,In Stock,In Use,Unit Cost,Bin\n";
+  S.parts.forEach(function(p) {
+    csv += '"' + (p.name || "").replace(/"/g, '""') + '",' +
+           '"' + (p.category || "").replace(/"/g, '""') + '",' +
+           '"' + (p.material || "").replace(/"/g, '""') + '",' +
+           '"' + (p.size || "").replace(/"/g, '""') + '",' +
+           '"' + (p.model || "").replace(/"/g, '""') + '",' +
+           (p.owned || 0) + ',' +
+           used(p.id) + ',' +
+           (p.unitCost || 0) + ',' +
+           '"' + (p.bin || "").replace(/"/g, '""') + '"\n';
+  });
+  var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "plumbing-inventory-" + today() + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/* Calculators */
+function calcWSFU() {
+  var lav = parseInt($("wsfu-lav").value) || 0;
+  var wc = parseInt($("wsfu-wc").value) || 0;
+  var shower = parseInt($("wsfu-shower").value) || 0;
+  var sink = parseInt($("wsfu-sink").value) || 0;
+  var dw = parseInt($("wsfu-dw").value) || 0;
+  var wash = parseInt($("wsfu-wash").value) || 0;
+  var hose = parseInt($("wsfu-hose").value) || 0;
+
+  var total = (lav * 1.0) + (wc * 2.2) + (shower * 2.0) + (sink * 1.5) + (dw * 1.5) + (wash * 2.0) + (hose * 2.5);
+  $("wsfu-total").textContent = total.toFixed(1);
+
+  var rec = "3/4 inch Supply Trunk";
+  if (total > 28) rec = "1-1/4 inch Main Supply Line";
+  else if (total > 14) rec = "1 inch Main Supply Line";
+  else if (total < 6) rec = "1/2 inch Supply Line (Small / Cabin)";
+  $("wsfu-rec").textContent = rec;
+}
+
+function calcPipeVol() {
+  var dia = parseFloat($("pvol-dia").value) || 0.75;
+  var len = parseFloat($("pvol-len").value) || 50;
+
+  var radiusInches = dia / 2;
+  var volCubicInches = Math.PI * Math.pow(radiusInches, 2) * (len * 12);
+  var gal = volCubicInches / 231;
+  var liters = gal * 3.78541;
+  var waitSec = (gal / 1.5) * 60; // based on 1.5 GPM standard shower/faucet
+
+  $("pvol-gal").textContent = gal.toFixed(2) + " gal (" + liters.toFixed(2) + " L)";
+  $("pvol-wait").textContent = Math.round(waitSec) + " seconds";
+}
+
+/* Master Render Dispatcher */
+function render() {
+  initTheme();
+  var v = curV();
+  var shopData = getShoppingData();
+
+  // Top Stats
+  var totalOwned = S.parts.reduce(function(acc, p) { return acc + (parseInt(p.owned) || 0); }, 0);
+  var totalShortage = shopData.missing.reduce(function(acc, m) { return acc + m.needed; }, 0);
+
+  $("stats-banner").innerHTML =
+    '<div class="stat-pill"><div class="lbl">Active Version</div><div class="val" style="font-size:1rem;color:var(--ac)">' + esc(v.name.split(" ")[0]) + '</div><div class="mu sm">' + esc(v.date) + '</div></div>' +
+    '<div class="stat-pill"><div class="lbl">Total Parts Stock</div><div class="val">' + totalOwned + ' <span class="sm mu">units</span></div><div class="mu sm">' + S.parts.length + ' cataloged</div></div>' +
+    '<div class="stat-pill"><div class="lbl">Stock Balance</div><div class="val ' + (totalShortage > 0 ? 'bad' : 'ok') + '">' + (totalShortage > 0 ? '-' + totalShortage + ' Missing' : '✓ Fully Stocked') + '</div><div class="mu sm">' + (totalShortage > 0 ? '$' + shopData.totalEstCost.toFixed(2) + ' est' : 'Zero Deficit') + '</div></div>' +
+    '<div class="stat-pill"><div class="lbl">System Circuits</div><div class="val" style="font-size:1rem">🔵 Cold · 🔴 Hot</div><div class="mu sm">DWV & Filtration</div></div>';
+
+  // Navigation
+  var tabs = [
+    ["schematic", "📐 Architecture"],
+    ["parts", "📦 Parts Inventory"],
+    ["versions", "📑 Revisions & Layout"],
+    ["shopping", "🛒 BOM & Shopping"],
+    ["compare", "⚖️ Version Diff"],
+    ["calculators", "🧮 Sizing Tools"],
+    ["maintenance", "🛠️ Maintenance"],
+    ["backup", "💾 Data & Presets"]
+  ];
+
+  $("nav").innerHTML = tabs.map(function(t) {
+    return '<button class="' + (S.tab === t[0] ? 'on' : '') + '" onclick="setTab(\'' + t[0] + '\')">' + t[1] + '</button>';
+  }).join('');
+
+  var h = "";
+
+  /* -------------------------------------------------------------
+     TAB 1: ARCHITECTURE & SYSTEM SCHEMATIC
+  ------------------------------------------------------------- */
+  if (S.tab === "schematic") {
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<div><h2 class="card-title">System Architecture & Flow Topology</h2>' +
+        '<div class="mu sm">Live schematic of current revision: <b>' + esc(v.name) + '</b></div></div>' +
+        '<div class="row"><select onchange="selV(this.value)" style="width:auto;margin:0">' + opts(v.id) + '</select></div>' +
+      '</div>' +
+      '<div class="diagram-wrap">' +
+        '<svg class="diagram-svg" viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg">' +
+          '<!-- Grid Background -->' +
+          '<defs>' +
+            '<pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">' +
+              '<path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--bd)" stroke-width="0.5" opacity="0.4"/>' +
+            '</pattern>' +
+            '<linearGradient id="coldGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+              '<stop offset="0%" stop-color="#0284c7"/><stop offset="100%" stop-color="#38bdf8"/>' +
+            '</linearGradient>' +
+            '<linearGradient id="hotGrad" x1="0%" y1="0%" x2="100%" y2="0%">' +
+              '<stop offset="0%" stop-color="#e11d48"/><stop offset="100%" stop-color="#fb7185"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<rect width="880" height="320" fill="url(#grid)" rx="6"/>' +
+
+          '<!-- Cold Water Trunk Line -->' +
+          '<path d="M 60 110 L 210 110 L 260 110 L 350 110 L 460 110 L 590 110 L 740 110" fill="none" stroke="url(#coldGrad)" stroke-width="5" stroke-linecap="round"/>' +
+
+          '<!-- Branch to Water Heater -->' +
+          '<path d="M 350 110 L 350 200 L 400 200" fill="none" stroke="url(#coldGrad)" stroke-width="4" stroke-dasharray="4,2"/>' +
+
+          '<!-- Hot Water Trunk Line -->' +
+          '<path d="M 480 200 L 590 200 L 740 200" fill="none" stroke="url(#hotGrad)" stroke-width="5" stroke-linecap="round"/>' +
+
+          '<!-- Fixture Drops -->' +
+          '<path d="M 590 110 L 590 60" fill="none" stroke="url(#coldGrad)" stroke-width="3"/>' +
+          '<path d="M 610 200 L 610 60" fill="none" stroke="url(#hotGrad)" stroke-width="3"/>' +
+
+          '<path d="M 740 110 L 740 60" fill="none" stroke="url(#coldGrad)" stroke-width="3"/>' +
+          '<path d="M 760 200 L 760 60" fill="none" stroke="url(#hotGrad)" stroke-width="3"/>' +
+
+          '<!-- Drainage Line -->' +
+          '<path d="M 600 70 L 600 280 L 800 280" fill="none" stroke="var(--drain)" stroke-width="4" stroke-linecap="round" stroke-dasharray="6,4"/>' +
+
+          '<!-- Nodes / Stations -->' +
+          '<!-- Node 1: Municipal Water Meter -->' +
+          '<g class="diagram-node" onclick="alert(\'Station: Water Main & Meter\\nIncoming street supply at 60-80 PSI.\')">' +
+            '<rect x="20" y="85" width="80" height="50" rx="6" fill="var(--card)" stroke="var(--cold)" stroke-width="2"/>' +
+            '<text x="60" y="108" text-anchor="middle" font-size="11" font-weight="bold" fill="var(--tx)">MAIN</text>' +
+            '<text x="60" y="123" text-anchor="middle" font-size="9" fill="var(--mu)">METER 3/4"</text>' +
+          '</g>' +
+
+          '<!-- Node 2: PRV & Valve -->' +
+          '<g class="diagram-node" onclick="alert(\'Station: PRV (Pressure Reducing Valve)\\nRegulates down to safe 50 PSI.\')">' +
+            '<rect x="130" y="85" width="70" height="50" rx="6" fill="var(--card)" stroke="var(--ac)" stroke-width="2"/>' +
+            '<text x="165" y="107" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">PRV REG</text>' +
+            '<text x="165" y="122" text-anchor="middle" font-size="8" fill="var(--mu)">55 PSI</text>' +
+          '</g>' +
+
+          '<!-- Node 3: Whole House Filter -->' +
+          '<g class="diagram-node" onclick="alert(\'Station: Whole House Sediment / Carbon Filter\\nProtects valves and fixtures.\')">' +
+            '<rect x="230" y="80" width="85" height="60" rx="6" fill="var(--card)" stroke="var(--vent)" stroke-width="2"/>' +
+            '<text x="272" y="107" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">FILTRATION</text>' +
+            '<text x="272" y="123" text-anchor="middle" font-size="8" fill="var(--mu)">Sediment+Carbon</text>' +
+          '</g>' +
+
+          '<!-- Node 4: Water Heater -->' +
+          '<g class="diagram-node" onclick="alert(\'Station: Tankless / Tank Water Heater\\nFeeds hot water manifold.\')">' +
+            '<rect x="400" y="170" width="80" height="60" rx="6" fill="var(--card)" stroke="var(--hot)" stroke-width="2"/>' +
+            '<text x="440" y="198" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">HEATER</text>' +
+            '<text x="440" y="214" text-anchor="middle" font-size="8" fill="var(--mu)">120°F Loop</text>' +
+          '</g>' +
+
+          '<!-- Node 5: Kitchen Zone -->' +
+          '<g class="diagram-node" onclick="alert(\'Zone: Kitchen Sink & Dishwasher\\nCold, Hot, and Sanitary DWV.\')">' +
+            '<rect x="560" y="25" width="90" height="45" rx="6" fill="var(--card)" stroke="var(--bd)" stroke-width="2"/>' +
+            '<text x="605" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">KITCHEN</text>' +
+            '<text x="605" y="58" text-anchor="middle" font-size="8" fill="var(--mu)">Sink / Dishwasher</text>' +
+          '</g>' +
+
+          '<!-- Node 6: Master Bath Zone -->' +
+          '<g class="diagram-node" onclick="alert(\'Zone: Master Bathroom\\nVanity, Low-flow Toilet, and Shower.\')">' +
+            '<rect x="710" y="25" width="90" height="45" rx="6" fill="var(--card)" stroke="var(--bd)" stroke-width="2"/>' +
+            '<text x="755" y="45" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">BATHROOM</text>' +
+            '<text x="755" y="58" text-anchor="middle" font-size="8" fill="var(--mu)">Shower / Lav / WC</text>' +
+          '</g>' +
+
+          '<!-- Node 7: Main Sewer Lateral -->' +
+          '<g class="diagram-node" onclick="alert(\'Drainage: Main Waste Sewer Lateral / Cleanout.\')">' +
+            '<rect x="790" y="255" width="75" height="45" rx="6" fill="var(--card)" stroke="var(--drain)" stroke-width="2"/>' +
+            '<text x="827" y="276" text-anchor="middle" font-size="10" font-weight="bold" fill="var(--tx)">SEWER</text>' +
+            '<text x="827" y="290" text-anchor="middle" font-size="8" fill="var(--mu)">Main Lateral</text>' +
+          '</g>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="diagram-legend">' +
+        '<span><span class="legend-dot" style="background:#0284c7"></span> Cold Water Supply (3/4" - 1/2")</span>' +
+        '<span><span class="legend-dot" style="background:#e11d48"></span> Hot Water Supply (1/2")</span>' +
+        '<span><span class="legend-dot" style="background:#78716c"></span> Drainage DWV & Vent</span>' +
+        '<span><span class="legend-dot" style="background:#0d9488"></span> Treatment / Filtration</span>' +
+      '</div>' +
+    '</div>';
+
+    // Current version zone breakdown
+    h += '<div class="card">' +
+      '<div class="card-header"><h3 class="card-title">Installed Architectural Placements (' + v.items.length + ')</h3>' +
+      '<button class="s" onclick="setTab(\'versions\')">+ Add / Manage Placements</button></div>';
+
+    if (!v.items.length) {
+      h += '<p class="mu">No placements yet recorded for this version.</p>';
+    } else {
+      h += '<div class="g2">';
+      v.items.forEach(function(item) {
+        var p = getPart(item.partId);
+        var badgeCls = item.sys === 'Hot' ? 'badge-hot' : (item.sys === 'Drain' ? 'badge-drain' : (item.sys === 'Treatment' ? 'badge-vent' : 'badge-cold'));
+        h += '<div class="card-sub">' +
+          '<div class="row"><b>' + esc(item.loc) + '</b><span class="badge-chip ' + badgeCls + '">' + esc(item.sys || 'Cold') + '</span></div>' +
+          '<div class="mu sm" style="margin-top:4px">' + esc(pn(item.partId)) + ' <b style="color:var(--tx)">×' + item.qty + '</b></div>' +
+          (item.note ? '<div class="mu sm" style="font-style:italic;margin-top:2px">Note: ' + esc(item.note) + '</div>' : '') +
+        '</div>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 2: INVENTORY & STOCKROOM
+  ------------------------------------------------------------- */
+  if (S.tab === "parts") {
+    h += '<div class="card">' +
+      '<div class="card-header"><h3 class="card-title">+ Catalog a Plumbing Part</h3><span class="mu sm">Add fittings, valves, or pipes</span></div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Component Name</label><input id="p-name" placeholder="e.g. Full Port Ball Valve"></div>' +
+        '<div><label class="sm mu">Category</label><select id="p-cat">' +
+          ['Valves', 'Pipes', 'Fittings', 'Treatment', 'Drain & DWV', 'Fixtures', 'Hardware'].map(function(c) {
+            return '<option value="' + c + '">' + c + '</option>';
+          }).join('') +
+        '</select></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Material</label><input id="p-mat" placeholder="e.g. Brass, PEX-A, PVC Sch 40, Copper"></div>' +
+        '<div><label class="sm mu">Nominal Size / Diameter</label><input id="p-size" placeholder="e.g. 1/2 in, 3/4 in, 1-1/2 in"></div>' +
+      '</div>' +
+      '<div class="g3">' +
+        '<div><label class="sm mu">Brand & Model</label><input id="p-model" placeholder="e.g. Apollo LF, Uponor"></div>' +
+        '<div><label class="sm mu">Units Currently Owned</label><input id="p-owned" type="number" min="0" value="0"></div>' +
+        '<div><label class="sm mu">Min Stock Level</label><input id="p-min" type="number" min="0" value="2"></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Estimated Unit Cost ($)</label><input id="p-cost" type="number" step="0.01" min="0" value="0.00"></div>' +
+        '<div><label class="sm mu">Storage Bin / Shelf</label><input id="p-bin" placeholder="e.g. Rack 2, Bin A-4"></div>' +
+      '</div>' +
+      '<div style="margin-top:10px"><button class="b" onclick="addPart()">Catalog Part into Stock</button></div>' +
+    '</div>';
+
+    // Search and inventory filter
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<h3 class="card-title">Stockroom Inventory (' + S.parts.length + ' Items)</h3>' +
+        '<div class="mu sm">In-use counts calculated against active: <b>' + esc(v.name) + '</b></div>' +
+      '</div>';
+
+    if (!S.parts.length) {
+      h += '<p class="mu">Your inventory is currently empty. Add parts above or load a sample preset.</p>';
+    } else {
+      S.parts.forEach(function(p) {
+        var u = used(p.id);
+        var spare = (p.owned || 0) - u;
+        var isLow = p.minStock && spare < p.minStock && spare >= 0;
+
+        h += '<div class="card" style="margin-bottom:8px">' +
+          '<div class="row">' +
+            '<div>' +
+              '<div style="font-size:1.05rem;font-weight:700">' + esc(p.name) + '</div>' +
+              '<div class="mu sm">' +
+                '<span class="badge-chip" style="background:var(--card-sub);border:1px solid var(--bd);margin-right:6px">' + esc(p.category || 'Fittings') + '</span>' +
+                (p.size ? '<b>' + esc(p.size) + '</b> · ' : '') +
+                (p.material ? esc(p.material) + ' · ' : '') +
+                (p.model ? esc(p.model) : '') +
+                (p.bin ? ' · <span style="color:var(--ac)">📍 ' + esc(p.bin) + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="row" style="gap:4px">' +
+              '<button class="s" onclick="editPartModal(\'' + p.id + '\')">Edit</button>' +
+              '<button class="x" onclick="delPart(\'' + p.id + '\')">Delete</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="row" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--bd)">' +
+            '<div class="mu sm">' +
+              'In System: <b>' + u + '</b> · ' +
+              (spare < 0
+                ? '<span class="badge-chip badge-bad">⚠️ Short by ' + (-spare) + '</span>'
+                : (isLow
+                    ? '<span class="badge-chip badge-wn">Low Stock: ' + spare + ' spare</span>'
+                    : '<span class="badge-chip badge-ok">Spare: ' + spare + '</span>')) +
+              (p.unitCost ? ' · <span style="color:var(--mu)">$' + p.unitCost.toFixed(2) + ' ea</span>' : '') +
+            '</div>' +
+            '<div class="row">' +
+              '<span class="sm mu">In Stock:</span> ' +
+              '<button class="s" style="padding:3px 9px" onclick="adj(\'' + p.id + '\', -1)">−</button> ' +
+              '<b style="min-width:26px;text-align:center;font-size:1.05rem">' + (p.owned || 0) + '</b> ' +
+              '<button class="s" style="padding:3px 9px" onclick="adj(\'' + p.id + '\', 1)">+</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+    }
+    h += '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 3: REVISIONS & LAYOUT (VERSIONS)
+  ------------------------------------------------------------- */
+  if (S.tab === "versions") {
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<div><h3 class="card-title">System Revisions & As-Built Snapshots</h3><div class="mu sm">Select, manage, or create architectural iterations</div></div>' +
+        '<div><select onchange="selV(this.value)" style="margin:0;font-weight:600">' + opts(v.id) + '</select></div>' +
+      '</div>' +
+      '<div class="card-sub">' +
+        '<div class="row"><div><b>Status:</b> <span class="badge-chip ' + (v.status === 'As-Built' ? 'badge-ok' : 'badge-wn') + '">' + esc(v.status || 'Active') + '</span> · <b>Date:</b> ' + esc(v.date) + (v.author ? ' · <b>By:</b> ' + esc(v.author) : '') + '</div></div>' +
+        (v.note ? '<div class="mu sm" style="margin-top:6px">' + esc(v.note) + '</div>' : '') +
+      '</div>' +
+    '</div>';
+
+    // Installed components in this version
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<h3 class="card-title">Placements in this Revision (' + v.items.length + ')</h3>' +
+        '<span class="mu sm">Physical runs, fittings, and fixtures</span>' +
+      '</div>';
+
+    if (!v.items.length) {
+      h += '<p class="mu">No placements yet recorded. Add where each component is installed below.</p>';
+    } else {
+      v.items.forEach(function(item, idx) {
+        var badgeCls = item.sys === 'Hot' ? 'badge-hot' : (item.sys === 'Drain' ? 'badge-drain' : (item.sys === 'Treatment' ? 'badge-vent' : 'badge-cold'));
+        h += '<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)">' +
+          '<div>' +
+            '<div style="font-weight:600">' + esc(item.loc) + ' <span class="badge-chip ' + badgeCls + '">' + esc(item.sys || 'Cold') + '</span></div>' +
+            '<div class="mu sm">' + esc(pn(item.partId)) + ' <b style="color:var(--tx)">×' + item.qty + '</b>' +
+            (item.note ? ' · <span style="font-style:italic">' + esc(item.note) + '</span>' : '') + '</div>' +
+          '</div>' +
+          '<button class="x" onclick="delItem(' + idx + ')">Remove</button>' +
+        '</div>';
+      });
+    }
+
+    // Add component form
+    h += '<div class="card-sub" style="margin-top:14px">' +
+      '<div style="font-weight:700;margin-bottom:6px">+ Add Installed Component to Revision</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Location / Subsystem</label><input id="i-loc" placeholder="e.g. Kitchen Island Sink, Master Shower"></div>' +
+        '<div><label class="sm mu">Circuit / Subsystem</label><select id="i-sys">' +
+          '<option value="Cold">🔵 Cold Water Supply</option>' +
+          '<option value="Hot">🔴 Hot Water Supply</option>' +
+          '<option value="Drain">🟤 Drainage / Waste / Vent</option>' +
+          '<option value="Treatment">🟡 Filtration / Softener</option>' +
+        '</select></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Part from Inventory</label><select id="i-part">' +
+          (S.parts.length ? S.parts.map(function(p) {
+            return '<option value="' + p.id + '">' + esc(p.name + (p.size ? ' (' + p.size + ')' : '')) + '</option>';
+          }).join('') : '<option value="">No parts in inventory</option>') +
+        '</select></div>' +
+        '<div><label class="sm mu">Quantity Required</label><input id="i-qty" type="number" min="1" value="1"></div>' +
+      '</div>' +
+      '<div><label class="sm mu">Installation Notes (Optional)</label><input id="i-note" placeholder="e.g. Mounted behind drywall with access panel"></div>' +
+      '<div style="margin-top:6px"><button class="b" onclick="addItem()">Add to Revision</button></div>' +
+    '</div>';
+
+    h += '</div>';
+
+    // Clone / New version form
+    h += '<div class="card">' +
+      '<h3 class="card-title">Save New Revision / Clone</h3>' +
+      '<div class="mu sm" style="margin-bottom:8px">Copies all current placements into a new snapshot so you can design future plumbing expansions without altering as-built logs.</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Revision Name</label><input id="v-name" placeholder="e.g. v3 Basement Bathroom Addition"></div>' +
+        '<div><label class="sm mu">Status</label><select id="v-status"><option value="Planned">Planned</option><option value="Under Construction">Under Construction</option><option value="As-Built">As-Built</option><option value="Archived">Archived</option></select></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Author / Plumber</label><input id="v-author" placeholder="e.g. John Doe"></div>' +
+        '<div><label class="sm mu">Scope / Reason</label><input id="v-note" placeholder="e.g. Upgrading water heater to tankless heat pump"></div>' +
+      '</div>' +
+      '<div class="row" style="margin-top:10px">' +
+        '<button class="b" onclick="newV()">Clone to New Revision</button>' +
+        (S.versions.length > 1 ? '<button class="x" onclick="delV()">Delete This Revision</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 4: BILL OF MATERIALS & PROCUREMENT
+  ------------------------------------------------------------- */
+  if (S.tab === "shopping") {
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<div><h3 class="card-title">Bill of Materials & Shopping Mode</h3><div class="mu sm">Reconciles active version needs against stockroom inventory</div></div>' +
+        '<div class="row">' +
+          '<button class="b" onclick="copyShoppingList()">📋 Copy Shopping List</button>' +
+          '<button class="s" onclick="window.print()">🖨️ Print BOM</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="stats-banner">' +
+        '<div class="stat-pill"><div class="lbl">Unique Parts Needed</div><div class="val">' + shopData.all.length + '</div></div>' +
+        '<div class="stat-pill"><div class="lbl">Items in Deficit</div><div class="val bad">' + shopData.missing.length + '</div></div>' +
+        '<div class="stat-pill"><div class="lbl">Est. Purchase Cost</div><div class="val" style="color:var(--ac)">$' + shopData.totalEstCost.toFixed(2) + '</div></div>' +
+      '</div>' +
+    '</div>';
+
+    // Shortages list
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<h3 class="card-title">Hardware Store Checklist (Shortages Only)</h3>' +
+        '<span class="mu sm">Check items off while shopping</span>' +
+      '</div>';
+
+    if (!shopData.missing.length) {
+      h += '<div class="card-sub" style="border-color:var(--ok);background:var(--ok-bg)">' +
+        '<b class="ok">🎉 All required plumbing components are in stock!</b>' +
+        '<div class="mu sm" style="color:var(--tx)">You have enough fittings, pipes, and valves to complete this revision.</div>' +
+      '</div>';
+    } else {
+      shopData.missing.forEach(function(item) {
+        var key = v.id + "_" + item.part.id;
+        var checked = S.shoppingChecked && S.shoppingChecked[key];
+        var cost = item.needed * (item.part.unitCost || 0);
+
+        h += '<div class="shop-item ' + (checked ? 'checked' : '') + '">' +
+          '<input type="checkbox" ' + (checked ? 'checked' : '') + ' onchange="toggleShopItem(\'' + key + '\')">' +
+          '<div style="flex:1">' +
+            '<div style="font-weight:700">' + esc(item.part.name) + ' <span class="badge-chip" style="background:var(--card-sub);border:1px solid var(--bd)">' + esc(item.part.size || '') + '</span></div>' +
+            '<div class="mu sm">' + esc(item.part.material || '') + (item.part.model ? ' · ' + esc(item.part.model) : '') + (item.part.bin ? ' · Bin: ' + esc(item.part.bin) : '') + '</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div class="bad">Need: ' + item.needed + '</div>' +
+            '<div class="mu sm">$' + cost.toFixed(2) + '</div>' +
+          '</div>' +
+        '</div>';
+      });
+    }
+    h += '</div>';
+
+    // Full BOM table
+    h += '<div class="card">' +
+      '<h3 class="card-title">Full Bill of Materials Reconciliation</h3>' +
+      '<table class="data-table">' +
+        '<thead><tr><th>Part Description</th><th>Category</th><th>Required</th><th>In Stock</th><th>Delta</th><th>Unit Cost</th></tr></thead>' +
+        '<tbody>';
+    shopData.all.forEach(function(item) {
+      var delta = item.owned - item.required;
+      h += '<tr>' +
+        '<td><b>' + esc(item.part.name) + '</b><div class="mu sm">' + esc(item.part.size || '') + ' ' + esc(item.part.material || '') + '</div></td>' +
+        '<td>' + esc(item.part.category || 'Fittings') + '</td>' +
+        '<td>' + item.required + '</td>' +
+        '<td>' + item.owned + '</td>' +
+        '<td>' + (delta < 0 ? '<span class="bad">Short ' + (-delta) + '</span>' : '<span class="ok">+' + delta + ' spare</span>') + '</td>' +
+        '<td>$' + (item.part.unitCost || 0).toFixed(2) + '</td>' +
+      '</tr>';
+    });
+    h += '</tbody></table></div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 5: VERSION DIFF & AUDIT
+  ------------------------------------------------------------- */
+  if (S.tab === "compare") {
+    var n = S.versions.length;
+    if (!S.versions.some(function(x) { return x.id === S.ca; })) S.ca = S.versions[Math.max(0, n - 2)].id;
+    if (!S.versions.some(function(x) { return x.id === S.cb; })) S.cb = latest().id;
+
+    var vA = S.versions.find(function(x) { return x.id === S.ca; });
+    var vB = S.versions.find(function(x) { return x.id === S.cb; });
+    var d = diff(vA, vB);
+
+    h += '<div class="card">' +
+      '<div class="card-header"><h3 class="card-title">Revision Audit & Diff Engine</h3><div class="mu sm">Compare two plumbing architectures side-by-side</div></div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">From (Base / As-Built)</label><select onchange="setCmp(\'ca\', this.value)">' + opts(S.ca) + '</select></div>' +
+        '<div><label class="sm mu">To (Comparison / Proposed)</label><select onchange="setCmp(\'cb\', this.value)">' + opts(S.cb) + '</select></div>' +
+      '</div>' +
+    '</div>';
+
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<h3 class="card-title">Delta Report</h3>' +
+        '<div class="mu sm">' + (d.costDelta >= 0 ? 'Estimated material budget variance: <b class="bad">+$' + d.costDelta.toFixed(2) + '</b>' : 'Budget reduction: <b class="ok">-$' + (-d.costDelta).toFixed(2) + '</b>') + '</div>' +
+      '</div>';
+
+    if (!d.out.length) {
+      h += '<p class="mu" style="margin:0">Both revisions are identical! ' + d.same + ' placements match 100%.</p>';
+    } else {
+      d.out.forEach(function(o) {
+        var cls = o[0] === 'add' ? 'add' : (o[0] === 'rem' ? 'rem' : 'chg');
+        var symbol = o[0] === 'add' ? '➕ ' : (o[0] === 'rem' ? '➖ ' : '🔄 ');
+        h += '<div style="padding:8px 0;border-bottom:1px solid var(--bd)">' +
+          '<span class="tag ' + cls + '">' + symbol + o[1] + '</span> <b>' + esc(o[2]) + '</b>' +
+          '<div class="mu sm" style="margin-left:22px">' + esc(o[3]) + '</div>' +
+        '</div>';
+      });
+      h += '<div class="mu sm" style="margin-top:10px">' + d.same + ' components unchanged across revisions.</div>';
+    }
+    h += '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 6: PLUMBING SIZING & CODE CALCULATORS
+  ------------------------------------------------------------- */
+  if (S.tab === "calculators") {
+    h += '<div class="card">' +
+      '<h3 class="card-title">💧 WSFU (Water Supply Fixture Unit) Pipe Sizer</h3>' +
+      '<div class="mu sm" style="margin-bottom:10px">Calculates simultaneous demand units per Uniform Plumbing Code (UPC/IPC) to size main trunk & branch lines.</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Lavatory / Bathroom Sinks (1.0 WSFU)</label><input id="wsfu-lav" type="number" min="0" value="2" oninput="calcWSFU()"></div>' +
+        '<div><label class="sm mu">Water Closets / Toilets (2.2 WSFU)</label><input id="wsfu-wc" type="number" min="0" value="2" oninput="calcWSFU()"></div>' +
+      '</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Showers / Tubs (2.0 WSFU)</label><input id="wsfu-shower" type="number" min="0" value="2" oninput="calcWSFU()"></div>' +
+        '<div><label class="sm mu">Kitchen Sink (1.5 WSFU)</label><input id="wsfu-sink" type="number" min="0" value="1" oninput="calcWSFU()"></div>' +
+      '</div>' +
+      '<div class="g3">' +
+        '<div><label class="sm mu">Dishwasher (1.5 WSFU)</label><input id="wsfu-dw" type="number" min="0" value="1" oninput="calcWSFU()"></div>' +
+        '<div><label class="sm mu">Clothes Washer (2.0 WSFU)</label><input id="wsfu-wash" type="number" min="0" value="1" oninput="calcWSFU()"></div>' +
+        '<div><label class="sm mu">Hose Bibbs / Spigots (2.5 WSFU)</label><input id="wsfu-hose" type="number" min="0" value="2" oninput="calcWSFU()"></div>' +
+      '</div>' +
+      '<div class="card-sub" style="margin-top:12px">' +
+        '<div class="row">' +
+          '<div><span class="mu sm">Total Water Demand:</span> <b id="wsfu-total" style="font-size:1.2rem;color:var(--ac)">17.9</b> <span class="mu sm">WSFU</span></div>' +
+          '<div><span class="mu sm">Recommended Size:</span> <b id="wsfu-rec" class="ok">1 inch Main Supply Line</b></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    // Pipe volume & water retention calculator
+    h += '<div class="card">' +
+      '<h3 class="card-title">📏 Pipe Run Volume & Purge Wait Calculator</h3>' +
+      '<div class="mu sm" style="margin-bottom:10px">Calculate water volume held inside a pipe run to predict hot water delivery delay and winterization drain volumes.</div>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Inner Diameter</label><select id="pvol-dia" onchange="calcPipeVol()">' +
+          '<option value="0.5">1/2 in (PEX-A / Copper)</option>' +
+          '<option value="0.75" selected>3/4 in Trunk</option>' +
+          '<option value="1.0">1 in Main Supply</option>' +
+          '<option value="1.5">1-1/2 in Drain</option>' +
+          '<option value="2.0">2 in Waste Branch</option>' +
+          '<option value="3.0">3 in Main Soil Stack</option>' +
+        '</select></div>' +
+        '<div><label class="sm mu">Run Length (Feet)</label><input id="pvol-len" type="number" min="1" value="45" oninput="calcPipeVol()"></div>' +
+      '</div>' +
+      '<div class="card-sub">' +
+        '<div class="row">' +
+          '<div><span class="mu sm">Internal Water Volume:</span> <b id="pvol-gal" style="color:var(--ac)">1.03 gal (3.91 L)</b></div>' +
+          '<div><span class="mu sm">Hot Water Delay (at 1.5 GPM):</span> <b id="pvol-wait" class="wn">41 seconds</b></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 7: MAINTENANCE & INSPECTION LOG
+  ------------------------------------------------------------- */
+  if (S.tab === "maintenance") {
+    h += '<div class="card">' +
+      '<h3 class="card-title">+ Log Plumbing Maintenance / Inspection</h3>' +
+      '<div class="g2">' +
+        '<div><label class="sm mu">Task Name</label><input id="m-task" placeholder="e.g. Exercise Main Ball Valve, Replace Carbon Filter"></div>' +
+        '<div><label class="sm mu">Zone / Equipment</label><input id="m-zone" placeholder="e.g. Utility Room, Water Heater Bay"></div>' +
+      '</div>' +
+      '<div class="g3">' +
+        '<div><label class="sm mu">Date</label><input id="m-date" type="date" value="' + today() + '"></div>' +
+        '<div><label class="sm mu">Status</label><select id="m-status"><option value="Done">✓ Completed</option><option value="Scheduled">⏳ Scheduled</option><option value="Attention">⚠️ Needs Attention</option></select></div>' +
+        '<div><label class="sm mu">Technician / Owner</label><input id="m-tech" placeholder="e.g. Self / Licensed Plumber"></div>' +
+      '</div>' +
+      '<div><label class="sm mu">Inspection Notes</label><input id="m-notes" placeholder="e.g. Flushed sediment for 3 minutes, pressure gauge stable at 54 PSI"></div>' +
+      '<div style="margin-top:8px"><button class="b" onclick="addMaintLog()">Record Maintenance Log</button></div>' +
+    '</div>';
+
+    h += '<div class="card">' +
+      '<h3 class="card-title">Maintenance History & Schedule (' + (S.maintenanceLogs ? S.maintenanceLogs.length : 0) + ')</h3>';
+
+    if (!S.maintenanceLogs || !S.maintenanceLogs.length) {
+      h += '<p class="mu">No maintenance events recorded yet.</p>';
+    } else {
+      S.maintenanceLogs.forEach(function(m) {
+        var statusBadge = m.status === 'Done' ? 'badge-ok' : (m.status === 'Attention' ? 'badge-bad' : 'badge-wn');
+        h += '<div class="row" style="padding:10px 0;border-bottom:1px solid var(--bd)">' +
+          '<div>' +
+            '<div style="font-weight:700">' + esc(m.task) + ' <span class="badge-chip ' + statusBadge + '">' + esc(m.status) + '</span></div>' +
+            '<div class="mu sm">📅 ' + esc(m.date) + ' · 📍 ' + esc(m.zone) + (m.notes ? ' — ' + esc(m.notes) : '') + '</div>' +
+          '</div>' +
+          '<button class="x" onclick="delMaintLog(\'' + m.id + '\')">Remove</button>' +
+        '</div>';
+      });
+    }
+    h += '</div>';
+  }
+
+  /* -------------------------------------------------------------
+     TAB 8: BACKUP, PRESETS & DATA PORTABILITY
+  ------------------------------------------------------------- */
+  if (S.tab === "backup") {
+    h += '<div class="card">' +
+      '<h3 class="card-title">Quick Starter Presets</h3>' +
+      '<div class="mu sm" style="margin-bottom:10px">Preload complete real-world architectures to explore or use as templates:</div>' +
+      '<div class="g2">' +
+        '<button class="s" style="padding:10px;text-align:left" onclick="loadPreset(\'default\')">' +
+          '<b>🏠 Residential 2-Story (Full PEX-A)</b>' +
+          '<div class="mu sm">Trunk & branch, PRV, filtration, dual bath.</div>' +
+        '</button>' +
+        '<button class="s" style="padding:10px;text-align:left" onclick="loadPreset(\'tinyhouse\')">' +
+          '<b>🚐 Off-Grid RV / Tiny House</b>' +
+          '<div class="mu sm">12V Shurflo pump, 33 gal tank, accumulator.</div>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+
+    h += '<div class="card">' +
+      '<div class="card-header">' +
+        '<div><h3 class="card-title">JSON Data Backup & Portability</h3><div class="mu sm">All data resides in your browser localStorage</div></div>' +
+        '<div class="row">' +
+          '<button class="b" onclick="downloadBackupJson()">💾 Download .json</button>' +
+          '<button class="s" onclick="exportCsv()">📊 Export CSV</button>' +
+        '</div>' +
+      '</div>' +
+      '<textarea id="b-box" rows="8" placeholder="Paste JSON backup text here or click Show Backup"></textarea>' +
+      '<div class="row" style="margin-top:8px">' +
+        '<button class="s" onclick="exportB()">Show JSON Text</button>' +
+        '<button class="b" onclick="restoreB()">Restore from JSON</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  $("app").innerHTML = h;
+}
+
+// Initial boot
+S = load();
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "ci-cd-bundler-pipeline",
+    "id": "ci-cd-bundler-pipeline",
+    "title": "Static App Bundler Pipeline",
+    "sector": "ci-cd",
+    "category": "CI/CD PIPELINES",
+    "scope": ["ci-cd"],
+    "fileSize": "5.5 KB",
+    "tags": ["Bundler", "Compaction", "Pipeline"],
+    "overview": "Multi-stage meta-skill workflow orchestration pipelines and release gates.",
+    "badge": "v3.1",
+    "linkLive": "combos/",
+    "linkSubpage": "combos/?item=ci-cd-bundler-pipeline"
+  },
+  {
+    "slug": "multi-agent-orchestrator",
+    "id": "multi-agent-orchestrator",
+    "title": "Agentic Workflow Orchestrator",
+    "sector": "orchestration",
+    "category": "META-PIPELINES",
+    "scope": ["orchestration"],
+    "fileSize": "6.2 KB",
+    "tags": ["Multi-Agent", "Autonomous", "Gates"],
+    "overview": "Coordinates handoffs between researcher, architectural planner, coder, and verifier agents.",
+    "badge": "v1.4",
+    "linkLive": "combos/",
+    "linkSubpage": "combos/?item=multi-agent-orchestrator"
+  }
+]

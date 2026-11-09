@@ -1,0 +1,6 @@
+Metric,Size_KB,Duration_MS,Description
+src,817.01,0,Total raw source code size (src/)
+apps,463.43,0,Total cartridges directory size (apps/)
+build_without_apps_uncompacted,2181.89,101,Core platform runtime distribution excluding apps (public/)
+build_with_apps_uncompacted,2585.1,101,Total uncompacted distribution size including apps (public/)
+build_with_apps_compacted,2559.12,101,Total compacted distribution size including apps (public/)

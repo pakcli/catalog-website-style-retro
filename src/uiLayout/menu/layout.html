@@ -1,0 +1,228 @@
+<!-- Master Hub Launcher Layout (mainmenu) — 2x2 Grid with 1:1 Cards (3 Rows: Big Text w/ Corner Num, Quick Desc, Open Button) -->
+<style>
+.hub-shortcuts-hint {
+  font-family: var(--font-monospace, monospace);
+  font-size: 11px;
+  color: var(--text-muted, #7c8872);
+  text-align: center;
+  padding: 2px 0 1px;
+  letter-spacing: 0.04em;
+}
+.hub-media-screen {
+  position: relative;
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: var(--button-border-radius, 6px);
+  border: 1px solid oklch(from var(--interactive-accent) 45% c h / 45%);
+  background-color: #0e110d;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
+  text-decoration: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hub-media-screen .screen-preview-slot {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #191e17 0%, #0a0d09 100%);
+}
+.hub-corner-num {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-family: var(--font-monospace, monospace);
+  font-size: clamp(9px, 1.2vh, 11px);
+  font-weight: 700;
+  color: var(--text-muted, #7c8872);
+  letter-spacing: 0.05em;
+  user-select: none;
+  z-index: 2;
+}
+.hub-center-big-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-monospace, monospace);
+  font-size: clamp(22px, 4.5vh, 40px);
+  font-weight: 800;
+  color: var(--interactive-accent);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  user-select: none;
+  line-height: 1;
+}
+.hub-desc-row {
+  flex: 0 0 auto;
+  padding: 2px 4px;
+}
+.hub-quick-desc {
+  font-family: var(--font-monospace, monospace);
+  font-size: clamp(9px, 1.2vh, 11px);
+  line-height: 1.3;
+  color: var(--text-muted, #7c8872);
+  margin: 0;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.theme-light .hub-quick-desc {
+  color: #4b5543;
+}
+.hub-action-row {
+  flex: 0 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 7fr 3fr;
+  gap: 6px;
+  box-sizing: border-box;
+}
+.hub-action-row .btn-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 5px 8px;
+  font-family: var(--font-monospace, monospace);
+  font-size: clamp(10px, 1.3vh, 12px);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--button-border-radius, 4px);
+  background-color: var(--interactive-accent);
+  color: #0d0f0c;
+  border: var(--border-width, 1px) solid var(--outline-color, rgba(0, 0, 0, 0.4));
+  box-shadow: var(--box-shadow);
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hub-action-row .btn-open:hover {
+  filter: brightness(1.12);
+}
+.hub-action-row .btn-open:active {
+  box-shadow: var(--box-shadow-active);
+  transform: translateY(1px);
+}
+.hub-action-row .btn-share {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  padding: 5px 6px;
+  font-family: var(--font-monospace, monospace);
+  font-size: clamp(10px, 1.3vh, 12px);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--button-border-radius, 4px);
+  background-color: var(--button-normal);
+  color: var(--text-normal);
+  border: var(--border-width, 1px) solid var(--outline-color, rgba(0, 0, 0, 0.4));
+  box-shadow: var(--box-shadow);
+  box-sizing: border-box;
+  text-align: center;
+  user-select: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hub-action-row .btn-share:hover {
+  background-color: var(--button-hover);
+  color: var(--text-normal);
+}
+.hub-action-row .btn-share:active {
+  background-color: var(--button-active);
+  box-shadow: var(--box-shadow-active);
+  transform: translateY(1px);
+}
+.hub-action-row .btn-share .share-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+.hub-action-row .btn-share .share-label {
+  font-size: clamp(9px, 1.2vh, 11px);
+  line-height: 1;
+}
+</style>
+<div class="hub-shortcuts-hint">Press [1] Apps | [2] Skills | [3] Combos | [4] Scripts</div>
+<main class="app-cards-grid mobile-view-grid" id="hubGrid">
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="apps/" data-name="apps web applications decks cartridges">
+  <a href="apps/" class="hub-media-screen view-content" title="Open Apps">
+    <div class="screen-preview-slot">
+      <span class="hub-corner-num">[1]</span>
+      <div class="hub-center-big-text">apps</div>
+    </div>
+  </a>
+  <div class="hub-desc-row">
+    <p class="hub-quick-desc">Single-file cartridge web engines, interactive canvas tools, and offline presentation decks.</p>
+  </div>
+  <div class="hub-action-row">
+    <a href="apps/" class="button-link mod-cta btn-open" title="Open Apps"><span>Open</span></a>
+    <button type="button" class="button-link btn-share" data-share-url="apps/" title="Share link to Apps">
+      <span class="share-icon">🔗</span><span class="share-label">Share</span>
+    </button>
+  </div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="skills/" data-name="skills modular agent directives">
+  <a href="skills/" class="hub-media-screen view-content" title="Open Skills">
+    <div class="screen-preview-slot">
+      <span class="hub-corner-num">[2]</span>
+      <div class="hub-center-big-text">skills</div>
+    </div>
+  </a>
+  <div class="hub-desc-row">
+    <p class="hub-quick-desc">Standardized prompt directives, AI agent behaviors, and portable development guidelines.</p>
+  </div>
+  <div class="hub-action-row">
+    <a href="skills/" class="button-link mod-cta btn-open" title="Open Skills"><span>Open</span></a>
+    <button type="button" class="button-link btn-share" data-share-url="skills/" title="Share link to Skills">
+      <span class="share-icon">🔗</span><span class="share-label">Share</span>
+    </button>
+  </div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="combos/" data-name="combos workflow pipelines">
+  <a href="combos/" class="hub-media-screen view-content" title="Open Combos">
+    <div class="screen-preview-slot">
+      <span class="hub-corner-num">[3]</span>
+      <div class="hub-center-big-text">combo</div>
+    </div>
+  </a>
+  <div class="hub-desc-row">
+    <p class="hub-quick-desc">Multi-stage meta-skill orchestration pipelines, release checklists, and review gates.</p>
+  </div>
+  <div class="hub-action-row">
+    <a href="combos/" class="button-link mod-cta btn-open" title="Open Combos"><span>Open</span></a>
+    <button type="button" class="button-link btn-share" data-share-url="combos/" title="Share link to Combos">
+      <span class="share-icon">🔗</span><span class="share-label">Share</span>
+    </button>
+  </div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="scripts/" data-name="scripts context ops cli automations">
+  <a href="scripts/" class="hub-media-screen view-content" title="Open Scripts">
+    <div class="screen-preview-slot">
+      <span class="hub-corner-num">[4]</span>
+      <div class="hub-center-big-text">script</div>
+    </div>
+  </a>
+  <div class="hub-desc-row">
+    <p class="hub-quick-desc">Portable cross-platform PowerShell, Python, and Bash automation tools with standalone export.</p>
+  </div>
+  <div class="hub-action-row">
+    <a href="scripts/" class="button-link mod-cta btn-open" title="Open Scripts"><span>Open</span></a>
+    <button type="button" class="button-link btn-share" data-share-url="scripts/" title="Share link to Scripts">
+      <span class="share-icon">🔗</span><span class="share-label">Share</span>
+    </button>
+  </div>
+</article>
+</main>

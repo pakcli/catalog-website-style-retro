@@ -1,0 +1,52 @@
+# ==============================================================================
+# build-config.yaml.example - Master Build Configuration Template
+# Salin file ini menjadi build-config.yaml untuk konfigurasi aktif lokal.
+# JANGAN PERNAH COMMIT build-config.yaml jika berisi kredensial sensitif.
+# ==============================================================================
+
+app:
+  name: "Retro IT Knowledge Arcade"
+  version: "1.0.0"
+  theme_default: "vintage-computer"   # Dipilih dari src/style/themes/
+
+# ------------------------------------------------------------------------------
+# DATA SOURCE PATHS (DEFAULT: Pointing directly to root data/*)
+# Anda bisa mengubah (override) path di bawah ini ke direktori lain jika diperlukan.
+# Seluruh path wajib relatif terhadap workspace root (Rule #3).
+# ------------------------------------------------------------------------------
+sources:
+  assets:  "./data/assets"           # WebP thumbnails, preview snapshots, icons
+  apps:    "./data/apps"             # Standalone HTML cartridges
+  docs:    "./data/docs"             # Markdown docs & guides
+  scripts: "./data/scripts"          # Modular script source (.ps1, .py, .sh)
+  combos:  "./data/combos"           # Meta-skill workflow pipeline recipes
+  skills:  "./data/skills"           # Modular agent directives
+
+# ------------------------------------------------------------------------------
+# COMPILATION & STANDALONE SETTINGS
+# ------------------------------------------------------------------------------
+compiler:
+  standalone_suffix: "_standalone"   # Suffix output kompilasi (misal: script_standalone.ps1)
+  inline_adapters: true              # Otomatis inline helper modul lokal
+  minify_html: false                 # Pertahankan keterbacaan kode retro
+  generate_sourcemaps: false
+
+# ------------------------------------------------------------------------------
+# PRIVACY & SANITIZATION (RULE #4)
+# ------------------------------------------------------------------------------
+privacy:
+  mask_default_state: true           # Tampilkan data sensitif dengan sensor 2-huruf
+  allowed_domains_whitelist:
+    - "github.com"
+    - "raw.githubusercontent.com"
+    - "users.noreply.github.com"
+
+# ------------------------------------------------------------------------------
+# EXTERNAL DEPLOYMENT SETTINGS
+# ------------------------------------------------------------------------------
+deployment:
+  output_dir: "./public"             # Direktori output static build
+  target_remote: "origin"            # Git remote target
+  target_branch: "gh-pages"          # Branch tujuan untuk deploy publik
+  cname: ""                          # Domain kustom (opsional, biarkan kosong jika pakai github.io)
+  base_url: "./"                     # Base URL root-bounded relative

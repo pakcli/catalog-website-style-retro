@@ -1,5 +1,5 @@
 ---
-title: 📐 Unit Circle Resolver
+title: Unit Circle Resolver
 sector: edu
 category: MATH & CANVAS
 scope: [edu]
@@ -10,13 +10,13 @@ badge: v2.4
 img: "[[img-lightmode.webp]], [[img-darkmode.webp]]"
 ---
 
-# 📐 Interactive Unit Circle & Trigonometry Resolver
+# Interactive Unit Circle & Trigonometry Resolver
 
 A standalone client-side mathematical workbench designed for intuitive visualization of angular functions, coordinates on the Cartesian plane, and exact radical expressions.
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
 - **Dynamic Interactive Pivot**: Drag the coordinate pointer $\theta$ along the circumference of the unit circle to calculate live values.
 - **Exact Radical Conversion**: Automatic symbolic simplification ($\frac{\sqrt{2}}{2}$, $\frac{\sqrt{3}}{2}$, $\frac{1}{2}$, $\pi$ multiples).
@@ -26,7 +26,7 @@ A standalone client-side mathematical workbench designed for intuitive visualiza
 
 ---
 
-## 🔬 Mathematical Formulas
+## Mathematical Formulas
 
 ### Coordinate Mapping
 Given an angle $\theta$ measured counterclockwise from the positive $x$-axis:
@@ -43,7 +43,7 @@ $$\sec(\theta) = \frac{1}{\cos(\theta)}, \quad \csc(\theta) = \frac{1}{\sin(\the
 
 ---
 
-## 🎛️ Quadrant Behavior & Signs
+## Quadrant Behavior & Signs
 
 | Quadrant | Angle Range | $\sin(\theta)$ | $\cos(\theta)$ | $\tan(\theta)$ |
 |:---:|:---:|:---:|:---:|:---:|
@@ -54,7 +54,7 @@ $$\sec(\theta) = \frac{1}{\cos(\theta)}, \quad \csc(\theta) = \frac{1}{\sin(\the
 
 ---
 
-## 💡 Usage Guide
+## Usage Guide
 
 1. **Mouse / Touch Interaction**: Grab the red target indicator on the circumference to adjust angle $\theta$.
 2. **Step Snapping**: Toggle snap mode to lock automatically onto standard angles ($0^\circ, 30^\circ, 45^\circ, 60^\circ, 90^\circ, \dots$).

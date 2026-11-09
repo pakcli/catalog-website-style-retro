@@ -1,0 +1,44 @@
+<!-- Mode 1: Card Detailed Item (3:4 ratio, 16:9 media slot, title first, full telemetry) -->
+<article class="floppy-card card-detailed mod-triad" data-app-slug="{{slug}}" data-tags="{{tagsJoined}}" data-category="{{category}}">
+  <div class="floppy-header-row">
+    <span class="category-chip">{{categoryLabel}}</span>
+    <button class="pin-btn" data-pin-target="{{slug}}" title="Pin Cartridge" aria-label="Pin Cartridge">
+      <span class="pin-icon">☆</span>
+    </button>
+  </div>
+  
+  <div class="media-slot-16-9">
+    <div class="screen-preview-slot">
+      <img src="{{previewSrc}}" alt="{{title}}" class="thumb-img" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'preview-not-found-box\'><span class=\'not-found-icon\'>📺</span><span class=\'not-found-text\'>[preview not found]</span></div><div class=\'launch-prompt\'>▶</div>';" />
+      <div class="launch-prompt">▶</div>
+    </div>
+  </div>
+
+  <div class="card-content-body">
+    <h3 class="card-title">{{title}}</h3>
+    <p class="card-purpose">{{purpose}}</p>
+  </div>
+
+  <div class="telemetry-bar">
+    <span class="tele-item">{{fileSize}}</span>
+    <span class="tele-sep">│</span>
+    <span class="tele-item">{{loc}} LOC</span>
+    <span class="tele-sep">│</span>
+    <span class="tele-item">{{tokens}}</span>
+    <div class="tags-cluster">{{tagsHtml}}</div>
+  </div>
+
+  <div class="card-actions-detailed">
+    <a href="{{playgroundUrl}}" class="btn-primary-action" title="Open in Playground">
+      <span>&gt;_ Open in Playground</span>
+    </a>
+    <div class="secondary-dual-row">
+      <a href="{{downloadUrl}}" download class="btn-sub-action btn-dl" title="Download Standalone">
+        <span>⬇ Download</span>
+      </a>
+      <a href="{{standaloneUrl}}" target="_blank" rel="noopener noreferrer" class="btn-sub-action btn-standalone" title="Open Standalone">
+        <span>Standalone ↗</span>
+      </a>
+    </div>
+  </div>
+</article>

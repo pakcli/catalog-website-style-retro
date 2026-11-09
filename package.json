@@ -1,9 +1,10 @@
 {
-  "name": "retro-template-catalog-website",
-  "version": "2.1.0",
-  "description": "Tactile retro computing catalog template & dual-panel Bento playground",
+  "name": "retro-it-knowledge-arcade",
+  "version": "1.2.3",
+  "description": "Retro IT Knowledge Arcade — Decoupled 4-Subsystem Arcade & Bento Playground",
   "scripts": {
-    "build": "node src/modules/build-bundle.js"
+    "build": "node src/modules/build-bundle.js",
+    "serve": "npx serve public -l 8080"
   },
   "devDependencies": {
     "playwright": "^1.64.1"

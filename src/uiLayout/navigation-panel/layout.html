@@ -1,0 +1,31 @@
+<!-- Sticky CLI Navigation, Filter Tabs & Display Mode Controls Layout Shell -->
+<nav class="arcade-nav-panel" id="arcadeNavPanel">
+  <div class="nav-container-bar">
+    <div id="navbarSearchContainer"></div>
+
+    <div class="workspace-tab-header-container" style="margin-bottom: 0;">
+      <button type="button" class="workspace-tab-header is-active" data-scope="all">All</button>
+      <button type="button" class="workspace-tab-header" data-scope="edu">Edu</button>
+      <button type="button" class="workspace-tab-header" data-scope="tools">Tools</button>
+      <button type="button" class="workspace-tab-header" data-scope="games">Games</button>
+      <button type="button" class="workspace-tab-header" data-scope="electron">Electron</button>
+    </div>
+
+    <div class="filter-status-row">
+      <span id="diskCounterBadge" style="font-size: 11px; color: var(--text-muted); font-weight: 700; padding: 4px 10px; background-color: var(--background-secondary); border: 1px solid oklch(from var(--text-normal) l c h / 15%); border-radius: 4px; white-space: nowrap;">💾 1/1</span>
+      <button type="button" class="pin-only-toggle-btn" id="pinOnlyToggleBtn" title="Show Pinned Disks Only">★ PIN ONLY</button>
+    </div>
+
+    <div class="display-mode-switch-group">
+      <button class="mode-switch-btn active" data-mode="detailed" title="Mode 1: Card Detailed [3:4]">
+        <span class="mode-icon">🗂</span> Detailed
+      </button>
+      <button class="mode-switch-btn" data-mode="simple" title="Mode 2: Card Simple [3:4]">
+        <span class="mode-icon">🔲</span> Simple
+      </button>
+      <button class="mode-switch-btn" data-mode="table" title="Mode 3: Table List [<=60/72 cols]">
+        <span class="mode-icon">📋</span> Table
+      </button>
+    </div>
+  </div>
+</nav>

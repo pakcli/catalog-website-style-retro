@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark" style="background-color: #161a14; color: #d8dec9;">
+<head>
+<meta charset="UTF-8">
+<script>
+(function () {
+try {
+var m = localStorage.getItem('arcade_theme_mode') || 'theme-dark';
+var a = localStorage.getItem('arcade_accent_color') || '#b0a84a';
+var doc = document.documentElement;
+doc.classList.remove('theme-dark', 'theme-light');
+doc.classList.add(m);
+doc.setAttribute('data-theme', m);
+doc.style.setProperty('--interactive-accent', a);
+if (m === 'theme-light') {
+doc.style.backgroundColor = '#f4f6f0';
+doc.style.color = '#191d17';
+} else {
+doc.style.backgroundColor = '#161a14';
+doc.style.color = '#d8dec9';
+}
+} catch (e) {}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retro IT Knowledge Arcade | Fadhli S Lubis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* Instant Anti-FOUC Base Canvas */
+html, body {
+background-color: var(--background-primary, #161a14);
+color: var(--text-normal, #d8dec9);
+}
+html.theme-light, html.theme-light body {
+background-color: var(--background-primary, #f4f6f0);
+color: var(--text-normal, #191d17);
+}
+/* ==========================================================================
+PAGE-SPECIFIC LAYOUT ONLY - ZERO DUPLICATE COLOR OR BUTTON STYLES
+All visual styling comes directly from referense-theme/theme.css
+========================================================================== */
+.topbar-container {
+display: flex;
+justify-content: space-between;
+align-items: center;
+width: 100%;
+max-width: 100%;
+box-sizing: border-box;
+margin-bottom: 20px;
+position: sticky;
+top: 8px;
+z-index: 1000;
+padding: 6px 14px;
+}
+.filter-bar {
+display: flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
+gap: 12px;
+margin-bottom: 24px;
+}
+/* Thumbnail SVG Artwork Styling (Dark CRT Phosphor Display Well) */
+.thumb-svg {
+width: 100%;
+height: 100%;
+background: radial-gradient(circle at center, #191e17 0%, #0a0d09 100%);
+}
+.terminal-cursor {
+display: inline-block;
+color: var(--interactive-accent);
+font-weight: 700;
+font-family: var(--font-monospace, monospace);
+font-size: 14px;
+line-height: 1;
+margin-left: 2px;
+user-select: none;
+vertical-align: middle;
+animation: terminal-blink 1s step-end infinite;
+}
+@keyframes terminal-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.kbd-shortcut {
+padding: 1px 5px;
+border-radius: 4px;
+border: 1px solid oklch(from var(--text-normal) l c h / 25%);
+background-color: var(--background-paper);
+color: var(--interactive-accent);
+font-weight: 700;
+}
+@media (max-width: 700px) {
+.filter-bar { flex-direction: column; align-items: stretch; }
+}
+/* ==========================================================================
+LIBRARY BREADCRUMB
+- Mobile: icon home (🏠) / apps >
+- Desktop: text home (home) / apps >
+========================================================================== */
+.library-breadcrumb {
+display: inline-flex;
+align-items: center;
+flex-wrap: nowrap;
+gap: 6px;
+font-family: var(--font-monospace, monospace);
+font-size: 13px;
+min-width: 0;
+flex: 1 1 auto;
+overflow: visible;
+user-select: none;
+padding-left: 4px;
+}
+.library-breadcrumb .prompt-item {
+font-weight: 600;
+white-space: nowrap;
+color: var(--text-normal);
+transition: color 0.15s ease;
+display: inline-flex;
+align-items: center;
+}
+.library-breadcrumb a.prompt-item:hover {
+text-decoration: underline;
+color: var(--interactive-accent);
+filter: brightness(1.2);
+}
+.library-breadcrumb .prompt-sep {
+color: var(--text-muted, #7c8872);
+font-weight: 700;
+opacity: 0.75;
+user-select: none;
+flex-shrink: 0;
+}
+.library-breadcrumb .prompt-page {
+color: var(--text-normal, #f3f4ef);
+font-weight: 700;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+min-width: 0;
+max-width: 220px;
+flex-shrink: 1;
+}
+/* Desktop View (> 768px): Text home */
+.library-breadcrumb .prompt-home .home-text {
+display: inline-block;
+font-weight: 700;
+}
+/* Caret > is always visible in library as prompt ending > */
+.library-breadcrumb .prompt-terminal-caret {
+display: inline-flex;
+user-select: none;
+color: var(--text-muted, #7c8872);
+font-weight: 700;
+}
+/* Always display inline-typing-slot so '> |' is visible and blinking */
+.inline-typing-slot {
+display: inline-flex;
+align-items: center;
+position: relative;
+cursor: text;
+}
+/* Mobile Portrait View (<= 768px): Consistent Text home / apps > (No Emoji Icons) */
+@media (max-width: 768px) {
+.library-breadcrumb {
+font-size: 11px;
+gap: 4px;
+}
+.library-breadcrumb .prompt-home .home-text {
+display: inline-block;
+font-weight: 700;
+}
+.library-breadcrumb .prompt-page {
+max-width: 120px;
+}
+}
+</style>
+</head>
+<body class="theme-dark" data-page="home">
+<div class="arcade-shell">
+<section class="hero-floppy-disk">
+<div class="floppy-corner-cut"></div>
+<div class="hero-top-title-row">
+<h1 class="hero-main-title">💾 Retro IT Knowledge Arcade</h1>
+</div>
+<p class="hero-quick-desc">
+Decoupled knowledge operating system &amp; standalone web cartridges. Pick a subsystem below or press <strong>[1]-[4]</strong>.
+</p>
+<div class="hero-metric-row">
+<div class="metric-box">
+<span class="metric-label">SUBSYSTEMS</span>
+<strong class="metric-val" id="heroAppsLoadedVal">4 Modules</strong>
+</div>
+<div class="metric-box">
+<span class="metric-label">TIME (WIB)</span>
+<strong class="metric-val" id="heroWibClockVal">--:--:-- WIB</strong>
+</div>
+<div class="metric-box is-clickable" style="cursor: pointer;" data-action="open-accent-picker" title="Click to customize system accent color">
+<span class="metric-label">ACCENT</span>
+<strong class="metric-val" style="color: var(--interactive-accent);">
+<span class="accent-dot"></span>
+<span data-sync="accent-hex">#B0A84A</span>
+</strong>
+</div>
+<a href="https://github.com/fadhlisl/fadhlisl-my-id" target="_blank" rel="noopener noreferrer" class="metric-box is-clickable" title="Open GitHub Repository">
+<span class="metric-label">GITHUB</span>
+<strong class="metric-val" style="color: var(--interactive-accent);">fadhlisl ↗</strong>
+</a>
+</div>
+</section>
+<header class="view-header topbar-container sticky-topbar" id="stickyNavbar" data-role="sticky-navbar">
+<nav class="cli-prompt-line library-breadcrumb" id="cliPromptLine" data-role="cli-breadcrumb" aria-label="Breadcrumb">
+<a href="index.html" class="prompt-item prompt-home" style="text-decoration: none; color: inherit;" title="Software Library Home">
+<span class="home-text">home</span>
+</a>
+<span class="prompt-sep prompt-sep-page" id="promptSepPage" style="display: none;">/</span>
+<span class="prompt-item prompt-page" id="promptPageSegment" style="display: none;"></span>
+<span class="prompt-sep prompt-terminal-caret" id="promptTerminalCaret">&gt;</span>
+<div class="inline-typing-slot" id="inlineTypingSlot">
+<span class="inline-typed-text" id="terminalTypedText"></span>
+<span class="terminal-cursor cursor-blink" id="terminalCursor" title="Click to open Search &amp; History">|</span>
+<input type="search" id="topSearchInput" class="inline-ghost-input" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Terminal Prompt">
+</div>
+<div class="suggestion-container" id="suggestionBox" style="display: none;"></div>
+</nav>
+<div class="topbar-action-group" id="topbarActionGroup">
+<button type="button" class="topbar-btn" data-action="toggle-fullscreen" title="Toggle Grand Fullscreen [F11]">
+<span>⛶</span>
+</button>
+<button type="button" class="topbar-btn" id="searchActionBtn" title="Search Disks &amp; History">
+<span>🔍</span>
+</button>
+<button type="button" class="topbar-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
+<span id="themeIcon">☀️</span> <span id="themeText">Light Mode</span>
+</button>
+</div>
+</header>
+<style>
+.hub-shortcuts-hint {
+font-family: var(--font-monospace, monospace);
+font-size: 11px;
+color: var(--text-muted, #7c8872);
+text-align: center;
+padding: 2px 0 1px;
+letter-spacing: 0.04em;
+}
+.hub-media-screen {
+position: relative;
+width: 100%;
+flex: 1 1 0;
+min-height: 0;
+border-radius: var(--button-border-radius, 6px);
+border: 1px solid oklch(from var(--interactive-accent) 45% c h / 45%);
+background-color: #0e110d;
+box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
+text-decoration: none;
+overflow: hidden;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.hub-media-screen .screen-preview-slot {
+width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+align-items: center;
+justify-content: center;
+background: radial-gradient(circle at center, #191e17 0%, #0a0d09 100%);
+}
+.hub-corner-num {
+position: absolute;
+top: 6px;
+left: 8px;
+font-family: var(--font-monospace, monospace);
+font-size: clamp(9px, 1.2vh, 11px);
+font-weight: 700;
+color: var(--text-muted, #7c8872);
+letter-spacing: 0.05em;
+user-select: none;
+z-index: 2;
+}
+.hub-center-big-text {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+height: 100%;
+min-height: 0;
+font-family: var(--font-monospace, monospace);
+font-size: clamp(22px, 4.5vh, 40px);
+font-weight: 800;
+color: var(--interactive-accent);
+letter-spacing: 0.06em;
+text-transform: lowercase;
+user-select: none;
+line-height: 1;
+}
+.hub-desc-row {
+flex: 0 0 auto;
+padding: 2px 4px;
+}
+.hub-quick-desc {
+font-family: var(--font-monospace, monospace);
+font-size: clamp(9px, 1.2vh, 11px);
+line-height: 1.3;
+color: var(--text-muted, #7c8872);
+margin: 0;
+text-align: center;
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+.theme-light .hub-quick-desc {
+color: #4b5543;
+}
+.hub-action-row {
+flex: 0 0 auto;
+width: 100%;
+display: grid;
+grid-template-columns: 7fr 3fr;
+gap: 6px;
+box-sizing: border-box;
+}
+.hub-action-row .btn-open {
+display: flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+padding: 5px 8px;
+font-family: var(--font-monospace, monospace);
+font-size: clamp(10px, 1.3vh, 12px);
+font-weight: 700;
+text-decoration: none;
+border-radius: var(--button-border-radius, 4px);
+background-color: var(--interactive-accent);
+color: #0d0f0c;
+border: var(--border-width, 1px) solid var(--outline-color, rgba(0, 0, 0, 0.4));
+box-shadow: var(--box-shadow);
+box-sizing: border-box;
+text-align: center;
+user-select: none;
+cursor: pointer;
+white-space: nowrap;
+}
+.hub-action-row .btn-open:hover {
+filter: brightness(1.12);
+}
+.hub-action-row .btn-open:active {
+box-shadow: var(--box-shadow-active);
+transform: translateY(1px);
+}
+.hub-action-row .btn-share {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 3px;
+width: 100%;
+padding: 5px 6px;
+font-family: var(--font-monospace, monospace);
+font-size: clamp(10px, 1.3vh, 12px);
+font-weight: 600;
+text-decoration: none;
+border-radius: var(--button-border-radius, 4px);
+background-color: var(--button-normal);
+color: var(--text-normal);
+border: var(--border-width, 1px) solid var(--outline-color, rgba(0, 0, 0, 0.4));
+box-shadow: var(--box-shadow);
+box-sizing: border-box;
+text-align: center;
+user-select: none;
+cursor: pointer;
+white-space: nowrap;
+}
+.hub-action-row .btn-share:hover {
+background-color: var(--button-hover);
+color: var(--text-normal);
+}
+.hub-action-row .btn-share:active {
+background-color: var(--button-active);
+box-shadow: var(--box-shadow-active);
+transform: translateY(1px);
+}
+.hub-action-row .btn-share .share-icon {
+font-size: 11px;
+line-height: 1;
+}
+.hub-action-row .btn-share .share-label {
+font-size: clamp(9px, 1.2vh, 11px);
+line-height: 1;
+}
+</style>
+<div class="hub-shortcuts-hint">Press [1] Apps | [2] Skills | [3] Combos | [4] Scripts</div>
+<main class="app-cards-grid mobile-view-grid" id="hubGrid">
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="apps/" data-name="apps web applications decks cartridges">
+<a href="apps/" class="hub-media-screen view-content" title="Open Apps">
+<div class="screen-preview-slot">
+<span class="hub-corner-num">[1]</span>
+<div class="hub-center-big-text">apps</div>
+</div>
+</a>
+<div class="hub-desc-row">
+<p class="hub-quick-desc">Single-file cartridge web engines, interactive canvas tools, and offline presentation decks.</p>
+</div>
+<div class="hub-action-row">
+<a href="apps/" class="button-link mod-cta btn-open" title="Open Apps"><span>Open</span></a>
+<button type="button" class="button-link btn-share" data-share-url="apps/" title="Share link to Apps">
+<span class="share-icon">🔗</span><span class="share-label">Share</span>
+</button>
+</div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="skills/" data-name="skills modular agent directives">
+<a href="skills/" class="hub-media-screen view-content" title="Open Skills">
+<div class="screen-preview-slot">
+<span class="hub-corner-num">[2]</span>
+<div class="hub-center-big-text">skills</div>
+</div>
+</a>
+<div class="hub-desc-row">
+<p class="hub-quick-desc">Standardized prompt directives, AI agent behaviors, and portable development guidelines.</p>
+</div>
+<div class="hub-action-row">
+<a href="skills/" class="button-link mod-cta btn-open" title="Open Skills"><span>Open</span></a>
+<button type="button" class="button-link btn-share" data-share-url="skills/" title="Share link to Skills">
+<span class="share-icon">🔗</span><span class="share-label">Share</span>
+</button>
+</div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="combos/" data-name="combos workflow pipelines">
+<a href="combos/" class="hub-media-screen view-content" title="Open Combos">
+<div class="screen-preview-slot">
+<span class="hub-corner-num">[3]</span>
+<div class="hub-center-big-text">combo</div>
+</div>
+</a>
+<div class="hub-desc-row">
+<p class="hub-quick-desc">Multi-stage meta-skill orchestration pipelines, release checklists, and review gates.</p>
+</div>
+<div class="hub-action-row">
+<a href="combos/" class="button-link mod-cta btn-open" title="Open Combos"><span>Open</span></a>
+<button type="button" class="button-link btn-share" data-share-url="combos/" title="Share link to Combos">
+<span class="share-icon">🔗</span><span class="share-label">Share</span>
+</button>
+</div>
+</article>
+<article class="bases-cards-item floppy-card hub-card" data-hub-href="scripts/" data-name="scripts context ops cli automations">
+<a href="scripts/" class="hub-media-screen view-content" title="Open Scripts">
+<div class="screen-preview-slot">
+<span class="hub-corner-num">[4]</span>
+<div class="hub-center-big-text">script</div>
+</div>
+</a>
+<div class="hub-desc-row">
+<p class="hub-quick-desc">Portable cross-platform PowerShell, Python, and Bash automation tools with standalone export.</p>
+</div>
+<div class="hub-action-row">
+<a href="scripts/" class="button-link mod-cta btn-open" title="Open Scripts"><span>Open</span></a>
+<button type="button" class="button-link btn-share" data-share-url="scripts/" title="Share link to Scripts">
+<span class="share-icon">🔗</span><span class="share-label">Share</span>
+</button>
+</div>
+</article>
+</main>
+</div>
+<script src="main.js"></script>
+</body>
+</html>

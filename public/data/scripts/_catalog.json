@@ -1,0 +1,30 @@
+[
+  {
+    "slug": "powershell-context-cleaner",
+    "id": "powershell-context-cleaner",
+    "title": "Context Ops PowerShell Cleaner",
+    "sector": "cli",
+    "category": "CLI AUTOMATION",
+    "scope": ["cli"],
+    "fileSize": "2.8 KB",
+    "tags": ["PowerShell", "Sanitizer", "Cross-Platform"],
+    "overview": "Portable cross-platform PowerShell, Python, and Bash automation tools with standalone export.",
+    "badge": "v1.8",
+    "linkLive": "scripts/",
+    "linkSubpage": "scripts/?item=powershell-context-cleaner"
+  },
+  {
+    "slug": "cross-platform-deploy",
+    "id": "cross-platform-deploy",
+    "title": "Multi-Cloud Deploy Runner",
+    "sector": "devops",
+    "category": "DEVOPS SCRIPTS",
+    "scope": ["devops"],
+    "fileSize": "3.4 KB",
+    "tags": ["Deploy", "Cloud", "Script"],
+    "overview": "Deterministic deployment script for zero-backend static arcade distributions.",
+    "badge": "v2.2",
+    "linkLive": "scripts/",
+    "linkSubpage": "scripts/?item=cross-platform-deploy"
+  }
+]

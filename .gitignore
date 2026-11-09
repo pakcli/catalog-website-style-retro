@@ -1,10 +1,18 @@
-# PROJECT BUILDS & LOCAL ARTIFACTS
-public/
+# AI Agent & IDE
+.gemini/
+.agent/
+
+# Project Configurations
+build-config.yaml
 trash-bin/
 *.env
+*.env.local
 
-
-# MODULES
+# Modules
 node_modules/
 
-
+# Temporary uncommitted SCSS files
+src/theme/*.scss
+src/theme/**/*.scss
+src/reference-theme/*.scss
+*.temp.scss
